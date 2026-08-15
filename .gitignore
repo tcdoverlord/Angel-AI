@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.spec.bak
+*.db
+*.db-shm
+*.db-wal
+*.log
+smoke-*.json
+test-output/
