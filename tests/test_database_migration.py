@@ -45,3 +45,18 @@ def test_foundation_database_migrates_without_data_loss(tmp_path):
         }
     assert {"memories", "recommendation_history", "tool_activity"} <= tables
     assert {"sources_json", "created_at"} <= message_columns
+
+
+def test_delete_conversation_removes_only_its_messages(services):
+    database, _settings, _memory = services
+    delete_id = database.create_conversation("Delete me")
+    keep_id = database.create_conversation("Keep me")
+    database.add_message(delete_id, "user", "Delete this message")
+    database.add_message(keep_id, "user", "Keep this message")
+
+    assert database.delete_conversation(delete_id) is True
+    assert database.conversation_exists(delete_id) is False
+    assert database.get_messages(delete_id) == []
+    assert database.conversation_exists(keep_id) is True
+    assert database.get_messages(keep_id)[0]["content"] == "Keep this message"
+    assert database.delete_conversation(delete_id) is False

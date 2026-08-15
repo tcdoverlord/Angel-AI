@@ -27,7 +27,7 @@ class UnusedBrain:
         return BrainResponse("unused", local_ai_available=False)
 
 
-def test_sources_are_visibly_labeled_and_clickable(services):
+def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch):
     database, settings, memory = services
     root = tk.Tk()
     root.withdraw()
@@ -70,6 +70,24 @@ def test_sources_are_visibly_labeled_and_clickable(services):
                 time.sleep(0.01)
             assert ui.busy is False
         assert brain.modes == list(QUICK_ACTIONS)
+
+        delete_id = int(ui.current_conversation_id)
+        database.add_message(delete_id, "user", "Delete this with the conversation")
+        keep_id = database.create_conversation("Keep this conversation")
+        ui.refresh_conversations(select_id=delete_id)
+        monkeypatch.setattr("angel.ui.messagebox.askyesno", lambda *args, **kwargs: True)
+
+        ui.delete_conversation()
+
+        assert database.conversation_exists(delete_id) is False
+        assert database.get_messages(delete_id) == []
+        assert database.conversation_exists(keep_id) is True
+        assert ui.current_conversation_id == keep_id
+
+        ui.delete_conversation()
+        assert database.conversation_exists(keep_id) is False
+        assert ui.current_conversation_id not in {delete_id, keep_id}
+        assert database.conversation_exists(int(ui.current_conversation_id)) is True
     finally:
         started = time.monotonic()
         ui.close()

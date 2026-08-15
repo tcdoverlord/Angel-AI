@@ -145,6 +145,19 @@ class AngelUI:
         )
         style.map("Primary.TButton", background=[("active", COLORS["violet_hover"])])
         style.configure(
+            "Danger.TButton",
+            background=COLORS["panel_alt"],
+            foreground=COLORS["bad"],
+            bordercolor=COLORS["bad"],
+            padding=(12, 7),
+            font=("Segoe UI Semibold", 9),
+        )
+        style.map(
+            "Danger.TButton",
+            background=[("active", "#512B38"), ("pressed", "#673344")],
+            foreground=[("active", COLORS["white"])],
+        )
+        style.configure(
             "Angel.Treeview",
             background=COLORS["panel"],
             fieldbackground=COLORS["panel"],
@@ -257,8 +270,15 @@ class AngelUI:
         )
         self.conversation_list.grid(row=2, column=0, sticky="nsew")
         self.conversation_list.bind("<<ListboxSelect>>", self._select_conversation)
+        self.conversation_list.bind("<Delete>", lambda _event: self.delete_conversation())
+        ttk.Button(
+            sidebar,
+            text="Delete Conversation",
+            style="Danger.TButton",
+            command=self.delete_conversation,
+        ).grid(row=3, column=0, sticky="ew", pady=(10, 0))
         controls = tk.Frame(sidebar, bg=COLORS["charcoal"])
-        controls.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        controls.grid(row=4, column=0, sticky="ew", pady=(8, 0))
         controls.grid_columnconfigure((0, 1), weight=1)
         ttk.Button(controls, text="Memory", style="Angel.TButton", command=self.show_memory).grid(
             row=0, column=0, sticky="ew", padx=(0, 4)
@@ -370,6 +390,44 @@ class AngelUI:
         self.refresh_conversations(select_id=conversation_id)
         self.load_conversation(conversation_id)
         self.input_box.focus_set()
+
+    def delete_conversation(self) -> None:
+        if self.busy or self.current_conversation_id is None:
+            return
+        conversation_id = self.current_conversation_id
+        conversation = next(
+            (
+                item
+                for item in self.database.list_conversations()
+                if int(item["id"]) == conversation_id
+            ),
+            None,
+        )
+        if conversation is None:
+            return
+        title = str(conversation["title"])
+        confirmed = messagebox.askyesno(
+            "Delete Conversation",
+            f'Delete "{title}" and all of its messages?\n\nThis cannot be undone.',
+            icon="warning",
+            parent=self.root,
+        )
+        if not confirmed:
+            return
+        if not self.database.delete_conversation(conversation_id):
+            messagebox.showerror(
+                "Delete Conversation",
+                "That conversation could not be found.",
+                parent=self.root,
+            )
+            return
+        remaining = self.database.list_conversations()
+        if remaining:
+            self.current_conversation_id = int(remaining[0]["id"])
+        else:
+            self.current_conversation_id = self.database.create_conversation()
+        self.refresh_conversations(select_id=self.current_conversation_id)
+        self.load_conversation(self.current_conversation_id)
 
     def _select_conversation(self, _event: tk.Event[Any]) -> None:
         selection = self.conversation_list.curselection()

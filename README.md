@@ -84,8 +84,11 @@ environment are ignored by Git.
 ## Conversations
 
 Use **New Conversation** in the sidebar to start a separate thread. Previous
-conversations appear newest-first and survive restarts. Angel sends only a capped set
-of recent messages to the local model; it never sends the entire database on each turn.
+conversations appear newest-first and survive restarts. Select a conversation and use
+**Delete Conversation** (or press Delete while the conversation list is focused) to
+remove it and its messages after confirmation. Deleting the last conversation safely
+creates a fresh empty one. Angel sends only a capped set of recent messages to the local
+model; it never sends the entire database on each turn.
 
 ## Memory
 

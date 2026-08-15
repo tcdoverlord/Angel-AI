@@ -182,6 +182,14 @@ class Database:
                 (title.strip()[:80] or "New Conversation", utc_now(), conversation_id),
             )
 
+    def delete_conversation(self, conversation_id: int) -> bool:
+        """Delete one conversation and its messages through the foreign-key cascade."""
+        with self.transaction() as connection:
+            cursor = connection.execute(
+                "DELETE FROM conversations WHERE id = ?", (conversation_id,)
+            )
+            return cursor.rowcount > 0
+
     def add_message(
         self,
         conversation_id: int,
