@@ -6,9 +6,10 @@ import threading
 import tkinter as tk
 import webbrowser
 from concurrent.futures import Future
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 from typing import Any, Callable
 
+from .attachments import MAX_ATTACHMENTS, format_size, prepare_attachments
 from .brain import AngelBrain, BrainResponse
 from .database import Database
 from .memory import MEMORY_CATEGORIES, MemoryDisabledError, MemoryService
@@ -100,6 +101,7 @@ class AngelUI:
         self.busy = False
         self.current_conversation_id: int | None = None
         self.conversation_ids: list[int] = []
+        self.pending_attachments: list[dict[str, Any]] = []
         self.source_tag_counter = 0
         self._configure_window()
         self._configure_style()
@@ -333,6 +335,32 @@ class AngelUI:
         frame = tk.Frame(self.root, bg=COLORS["charcoal"], padx=14, pady=12)
         frame.grid(row=3, column=0, sticky="ew")
         frame.grid_columnconfigure(0, weight=1)
+        attachments = tk.Frame(frame, bg=COLORS["charcoal"])
+        attachments.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        attachments.grid_columnconfigure(1, weight=1)
+        ttk.Button(
+            attachments,
+            text="Upload Files",
+            style="Angel.TButton",
+            command=self.upload_files,
+        ).grid(row=0, column=0, sticky="w", padx=(0, 10))
+        self.attachment_label = tk.Label(
+            attachments,
+            text="Attach images, audio, video, documents, or any other file type",
+            bg=COLORS["charcoal"],
+            fg=COLORS["muted"],
+            font=("Segoe UI", 9),
+            anchor="w",
+        )
+        self.attachment_label.grid(row=0, column=1, sticky="ew")
+        self.clear_attachments_button = ttk.Button(
+            attachments,
+            text="Clear",
+            style="Angel.TButton",
+            command=self.clear_attachments,
+            state="disabled",
+        )
+        self.clear_attachments_button.grid(row=0, column=2, sticky="e", padx=(10, 0))
         self.input_box = tk.Text(
             frame,
             height=3,
@@ -345,21 +373,23 @@ class AngelUI:
             pady=10,
             font=("Segoe UI", 11),
         )
-        self.input_box.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+        self.input_box.grid(row=1, column=0, sticky="ew", padx=(0, 10))
+        self.input_box.bind("<Return>", self._send_on_enter)
+        self.input_box.bind("<KP_Enter>", self._send_on_enter)
         self.input_box.bind("<Control-Return>", self._send_shortcut)
         self.send_button = ttk.Button(
             frame, text="Send", style="Primary.TButton", command=self.send_message
         )
-        self.send_button.grid(row=0, column=1, sticky="ns")
+        self.send_button.grid(row=1, column=1, sticky="ns")
         self.thinking_label = tk.Label(
             frame,
-            text="Ctrl+Enter to send",
+            text="Enter to send · Shift+Enter for a new line",
             bg=COLORS["charcoal"],
             fg=COLORS["muted"],
             font=("Segoe UI", 9),
             anchor="w",
         )
-        self.thinking_label.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        self.thinking_label.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(5, 0))
 
     def _load_initial_conversation(self) -> None:
         conversations = self.database.list_conversations()
@@ -453,15 +483,36 @@ class AngelUI:
                 "muted",
             )
         for message in messages:
-            self._insert_message(message["role"], message["content"], message.get("sources", []))
+            self._insert_message(
+                message["role"],
+                message["content"],
+                message.get("sources", []),
+                message.get("attachments", []),
+            )
         self.chat.configure(state="disabled")
         self.chat.see("end")
 
     def _insert_message(
-        self, role: str, content: str, sources: list[dict[str, str]] | None = None
+        self,
+        role: str,
+        content: str,
+        sources: list[dict[str, str]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> None:
         self.chat.insert("end", "You\n" if role == "user" else "Angel\n", "user_label" if role == "user" else "angel_label")
         self.chat.insert("end", content.strip() + "\n", "user_text" if role == "user" else "angel_text")
+        if role == "user" and attachments:
+            for attachment in attachments:
+                name = str(attachment.get("name") or "unnamed file")
+                kind = str(attachment.get("media_kind") or "file")
+                size = format_size(int(attachment.get("size") or 0))
+                status = str(attachment.get("parse_status") or "metadata_only")
+                availability = "text available" if status == "text_extracted" else "attached · metadata only"
+                self.chat.insert(
+                    "end",
+                    f"  📎 {name} — {kind}, {size} · {availability}\n",
+                    "muted",
+                )
         if role == "assistant" and sources:
             self.chat.insert("end", f"Searched the web · {len(sources)} sources\n", "source_header")
             for source in sources:
@@ -481,29 +532,92 @@ class AngelUI:
 
     def send_message(self) -> None:
         text = self.input_box.get("1.0", "end").strip()
-        if not text or self.busy:
+        if (not text and not self.pending_attachments) or self.busy:
             return
+        attachments = list(self.pending_attachments)
         self.input_box.delete("1.0", "end")
-        self._begin_response(text, None)
+        self.clear_attachments()
+        self._begin_response(text, None, attachments)
 
     def send_quick_action(self, mode: str) -> None:
         if self.busy:
             return
-        self._begin_response("", mode)
+        attachments = list(self.pending_attachments)
+        self.clear_attachments()
+        self._begin_response("", mode, attachments)
+
+    def upload_files(self) -> None:
+        selected = filedialog.askopenfilenames(
+            parent=self.root,
+            title="Upload files to Angel",
+            filetypes=(
+                ("All files", "*.*"),
+                ("Images", "*.png *.jpg *.jpeg *.gif *.bmp *.webp *.tif *.tiff *.svg"),
+                ("Audio", "*.mp3 *.wav *.m4a *.aac *.flac *.ogg *.wma"),
+                ("Video", "*.mp4 *.mov *.mkv *.avi *.webm *.wmv *.m4v"),
+                ("Documents", "*.txt *.md *.pdf *.doc *.docx *.rtf *.csv *.json"),
+            ),
+        )
+        if not selected:
+            return
+        combined_paths = [item["path"] for item in self.pending_attachments] + list(selected)
+        self.pending_attachments = prepare_attachments(combined_paths)
+        self._update_attachment_bar()
+        if len(combined_paths) > MAX_ATTACHMENTS:
+            messagebox.showinfo(
+                "Angel Uploads",
+                f"Angel attached the first {MAX_ATTACHMENTS} unique files for this message.",
+                parent=self.root,
+            )
+
+    def clear_attachments(self) -> None:
+        self.pending_attachments = []
+        self._update_attachment_bar()
+
+    def _update_attachment_bar(self) -> None:
+        if not self.pending_attachments:
+            self.attachment_label.configure(
+                text="Attach images, audio, video, documents, or any other file type",
+                fg=COLORS["muted"],
+            )
+            self.clear_attachments_button.configure(state="disabled")
+            return
+        names = [str(item.get("name") or "unnamed file") for item in self.pending_attachments]
+        preview = ", ".join(names[:3])
+        if len(names) > 3:
+            preview += f" +{len(names) - 3} more"
+        self.attachment_label.configure(
+            text=f"{len(names)} attached: {preview}", fg=COLORS["electric"]
+        )
+        self.clear_attachments_button.configure(state="normal")
+
+    def _send_on_enter(self, event: tk.Event[Any]) -> str | None:
+        if event.state & 0x0001:
+            return None
+        self.send_message()
+        return "break"
 
     def _send_shortcut(self, _event: tk.Event[Any]) -> str:
         self.send_message()
         return "break"
 
-    def _begin_response(self, text: str, mode: str | None) -> None:
+    def _begin_response(
+        self,
+        text: str,
+        mode: str | None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> None:
         if self.current_conversation_id is None:
             self.new_conversation()
         conversation_id = int(self.current_conversation_id or 0)
         self.busy = True
         self.send_button.configure(state="disabled")
+        prepared_attachments = attachments or []
         display = mode + (f" — {text}" if text else "") if mode else text
+        if not display:
+            display = "Uploaded file" if len(prepared_attachments) == 1 else "Uploaded files"
         self.chat.configure(state="normal")
-        self._insert_message("user", display)
+        self._insert_message("user", display, attachments=prepared_attachments)
         self.chat.configure(state="disabled")
         self.chat.see("end")
         self._set_thinking("Thinking…")
@@ -514,6 +628,7 @@ class AngelUI:
             conversation_id,
             mode,
             lambda value: event_queue.put(("thinking", value)),
+            prepared_attachments,
         )
         self._poll_future(
             future, lambda done: self._response_finished(done, conversation_id)
@@ -524,7 +639,7 @@ class AngelUI:
             return
         self.busy = False
         self.send_button.configure(state="normal")
-        self._set_thinking("Ctrl+Enter to send")
+        self._set_thinking("Enter to send · Shift+Enter for a new line")
         try:
             response = future.result()
         except Exception as exc:

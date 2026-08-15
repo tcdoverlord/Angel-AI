@@ -21,6 +21,9 @@ account, and contains no telemetry, analytics, or tracking.
 - Searches current public information through a replaceable no-key search provider.
 - Shows a visible **Searched the web** label and compact clickable sources only when
   real search results were supplied to the model.
+- Accepts multiple images, audio files, videos, documents, archives, and arbitrary
+  file types from the message composer. Text-like files receive a bounded local text
+  extraction; unsupported formats remain honest metadata-only attachments.
 - Offers One More Thing, Make Money, Get Me Out, Build Something, Something Free, and
   Surprise Me through the same Angel brain and conversation.
 - Tracks recent suggestions locally to reduce repetition and can mark the latest idea
@@ -65,6 +68,10 @@ To run the source checkout, double-click `RUN-ANGEL.bat`, or use:
 ```powershell
 python angel.py
 ```
+
+In the message composer, press **Enter** to send and **Shift+Enter** to insert a new
+line. **Upload Files** accepts up to 20 unique files with no extension allowlist. Angel
+does not pretend to see, hear, or parse formats the selected local model cannot use.
 
 ## Build Angel.exe
 

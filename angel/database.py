@@ -62,6 +62,7 @@ class Database:
                     role TEXT NOT NULL,
                     content TEXT NOT NULL,
                     sources_json TEXT NOT NULL DEFAULT '[]',
+                    attachments_json TEXT NOT NULL DEFAULT '[]',
                     created_at TEXT NOT NULL,
                     FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
                 );
@@ -103,6 +104,7 @@ class Database:
             self._ensure_column(connection, "conversations", "created_at", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "conversations", "updated_at", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "messages", "sources_json", "TEXT NOT NULL DEFAULT '[]'")
+            self._ensure_column(connection, "messages", "attachments_json", "TEXT NOT NULL DEFAULT '[]'")
             self._ensure_column(connection, "messages", "created_at", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "memories", "text", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "memories", "category", "TEXT NOT NULL DEFAULT 'general'")
@@ -196,16 +198,25 @@ class Database:
         role: str,
         content: str,
         sources: list[dict[str, Any]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> int:
         if role not in {"user", "assistant", "system"}:
             raise ValueError("Unsupported message role")
         now = utc_now()
         serialized_sources = json.dumps(sources or [], ensure_ascii=False)
+        serialized_attachments = json.dumps(attachments or [], ensure_ascii=False)
         with self.transaction() as connection:
             cursor = connection.execute(
-                "INSERT INTO messages(conversation_id, role, content, sources_json, created_at) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (conversation_id, role, content, serialized_sources, now),
+                "INSERT INTO messages(conversation_id, role, content, sources_json, attachments_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    conversation_id,
+                    role,
+                    content,
+                    serialized_sources,
+                    serialized_attachments,
+                    now,
+                ),
             )
             connection.execute(
                 "UPDATE conversations SET updated_at = ? WHERE id = ?", (now, conversation_id)
@@ -215,7 +226,7 @@ class Database:
     def get_messages(self, conversation_id: int, limit: int = 100) -> list[dict[str, Any]]:
         with self.connect() as connection:
             rows = connection.execute(
-                "SELECT * FROM (SELECT id, role, content, sources_json, created_at "
+                "SELECT * FROM (SELECT id, role, content, sources_json, attachments_json, created_at "
                 "FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT ?) "
                 "ORDER BY id ASC",
                 (conversation_id, max(1, limit)),
@@ -228,6 +239,11 @@ class Database:
             except (json.JSONDecodeError, TypeError):
                 item["sources"] = []
                 item.pop("sources_json", None)
+            try:
+                item["attachments"] = json.loads(item.pop("attachments_json") or "[]")
+            except (json.JSONDecodeError, TypeError):
+                item["attachments"] = []
+                item.pop("attachments_json", None)
             messages.append(item)
         return messages
 

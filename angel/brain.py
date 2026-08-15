@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Callable
 
+from .attachments import attachment_context
 from .context import ContextBuilder
 from .database import Database
 from .ollama_client import OllamaClient, OllamaError
@@ -57,11 +58,13 @@ class AngelBrain:
         conversation_id: int,
         mode: str | None = None,
         status_callback: Callable[[str], None] | None = None,
+        attachments: list[dict[str, object]] | None = None,
     ) -> BrainResponse:
         if not self.database.conversation_exists(conversation_id):
             raise ValueError("Conversation does not exist")
         clean_user_text = user_text.strip()
-        if not clean_user_text and not mode:
+        prepared_attachments = attachments or []
+        if not clean_user_text and not mode and not prepared_attachments:
             raise ValueError("Message cannot be empty")
         self._note_recommendation_feedback(clean_user_text)
 
@@ -74,7 +77,15 @@ class AngelBrain:
             )
             display_text = f"{mode}" + (f" — {clean_user_text}" if clean_user_text else "")
 
-        self.database.add_message(conversation_id, "user", display_text)
+        attachment_text = attachment_context(prepared_attachments)
+        if attachment_text:
+            effective_text = (effective_text + "\n\n" + attachment_text).strip()
+        if not display_text:
+            display_text = "Uploaded file" if len(prepared_attachments) == 1 else "Uploaded files"
+
+        self.database.add_message(
+            conversation_id, "user", display_text, attachments=prepared_attachments
+        )
         self._set_title_from_first_turn(conversation_id, display_text)
         current = self.settings.get()
         loop = ToolLoop(self.tools, self.maximum_tool_calls)

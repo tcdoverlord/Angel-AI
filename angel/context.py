@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .attachments import attachment_context
 from .database import Database
 from .memory import MemoryDisabledError, MemoryService
 from .personality import ANGEL_PERSONALITY, response_style_instruction
@@ -71,7 +72,10 @@ class ContextBuilder:
             history = history[:-1]
         for item in history:
             if item["role"] in {"user", "assistant"}:
-                messages.append({"role": item["role"], "content": item["content"]})
+                content = item["content"]
+                if item["role"] == "user" and item.get("attachments"):
+                    content += "\n\n" + attachment_context(item["attachments"])
+                messages.append({"role": item["role"], "content": content})
         messages.append({"role": "user", "content": user_message})
         return self._trim(messages)
 

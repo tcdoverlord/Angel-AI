@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import tkinter as tk
 import threading
+from types import SimpleNamespace
 
 from angel.brain import BrainResponse
 from angel.recommendations import QUICK_ACTIONS
@@ -21,13 +22,17 @@ class WaitingOllama:
 class UnusedBrain:
     def __init__(self):
         self.modes = []
+        self.calls = []
 
     def respond(self, *args, **kwargs):
-        self.modes.append(kwargs.get("mode") if "mode" in kwargs else args[2])
+        mode = kwargs.get("mode") if "mode" in kwargs else args[2]
+        attachments = kwargs.get("attachments") if "attachments" in kwargs else args[4]
+        self.modes.append(mode)
+        self.calls.append({"text": args[0], "mode": mode, "attachments": attachments})
         return BrainResponse("unused", local_ai_available=False)
 
 
-def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch):
+def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch, tmp_path):
     database, settings, memory = services
     root = tk.Tk()
     root.withdraw()
@@ -62,6 +67,37 @@ def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch):
             ui.chat._w, "tag", "bind", source_tags[0], "<Button-1>"
         )
         assert binding
+
+        note = tmp_path / "note.txt"
+        note.write_text("Use this attachment text.", encoding="utf-8")
+        media = tmp_path / "recording.anymedia"
+        media.write_bytes(b"\x00\x01media")
+        monkeypatch.setattr(
+            "angel.ui.filedialog.askopenfilenames",
+            lambda **kwargs: (str(note), str(media)),
+        )
+        ui.upload_files()
+        assert len(ui.pending_attachments) == 2
+        ui.input_box.insert("1.0", "Review these files")
+        assert ui._send_on_enter(SimpleNamespace(state=0)) == "break"
+        deadline = time.monotonic() + 2
+        while ui.busy and time.monotonic() < deadline:
+            root.update()
+            time.sleep(0.01)
+        assert brain.calls[-1]["text"] == "Review these files"
+        assert [item["name"] for item in brain.calls[-1]["attachments"]] == [
+            "note.txt",
+            "recording.anymedia",
+        ]
+        assert ui.pending_attachments == []
+        assert "note.txt" in ui.chat.get("1.0", "end")
+
+        calls_before_shift_enter = len(brain.calls)
+        ui.input_box.insert("1.0", "Keep editing")
+        assert ui._send_on_enter(SimpleNamespace(state=0x0001)) is None
+        assert len(brain.calls) == calls_before_shift_enter
+        ui.input_box.delete("1.0", "end")
+
         for mode in QUICK_ACTIONS:
             ui.send_quick_action(mode)
             deadline = time.monotonic() + 2
@@ -69,7 +105,7 @@ def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch):
                 root.update()
                 time.sleep(0.01)
             assert ui.busy is False
-        assert brain.modes == list(QUICK_ACTIONS)
+        assert [mode for mode in brain.modes if mode] == list(QUICK_ACTIONS)
 
         delete_id = int(ui.current_conversation_id)
         database.add_message(delete_id, "user", "Delete this with the conversation")

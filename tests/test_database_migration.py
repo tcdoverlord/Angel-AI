@@ -44,7 +44,7 @@ def test_foundation_database_migrates_without_data_loss(tmp_path):
             row[1] for row in migrated.execute("PRAGMA table_info(messages)")
         }
     assert {"memories", "recommendation_history", "tool_activity"} <= tables
-    assert {"sources_json", "created_at"} <= message_columns
+    assert {"sources_json", "attachments_json", "created_at"} <= message_columns
 
 
 def test_delete_conversation_removes_only_its_messages(services):
@@ -60,3 +60,23 @@ def test_delete_conversation_removes_only_its_messages(services):
     assert database.conversation_exists(keep_id) is True
     assert database.get_messages(keep_id)[0]["content"] == "Keep this message"
     assert database.delete_conversation(delete_id) is False
+
+
+def test_message_attachments_persist(services, tmp_path):
+    database, _settings, _memory = services
+    conversation_id = database.create_conversation("Attachments")
+    attachment = {
+        "name": "photo.png",
+        "path": str(tmp_path / "photo.png"),
+        "mime_type": "image/png",
+        "media_kind": "image",
+        "size": 42,
+        "parse_status": "metadata_only",
+        "text_excerpt": "",
+    }
+
+    database.add_message(
+        conversation_id, "user", "Here is a photo", attachments=[attachment]
+    )
+
+    assert database.get_messages(conversation_id)[0]["attachments"] == [attachment]

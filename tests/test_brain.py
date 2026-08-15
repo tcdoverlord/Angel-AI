@@ -104,3 +104,30 @@ def test_explicit_memory_is_saved_even_if_ollama_is_offline(services):
 
     assert "safe tool completed" in response.content
     assert memory.search("purple")
+
+
+def test_brain_accepts_attachment_only_message_without_claiming_file_access(services):
+    database, _settings, _memory = services
+    conversation_id = database.create_conversation()
+    ollama = SequenceOllama(["I can see the file metadata, but its content was not parsed."])
+    brain = make_brain(services, ollama)
+    attachment = {
+        "name": "clip.mp4",
+        "path": "C:/private/videos/clip.mp4",
+        "mime_type": "video/mp4",
+        "media_kind": "video",
+        "size": 1024,
+        "parse_status": "metadata_only",
+        "text_excerpt": "",
+    }
+
+    response = brain.respond("", conversation_id, attachments=[attachment])
+
+    assert response.content
+    prompt = "\n".join(item["content"] for item in ollama.messages[0])
+    assert "clip.mp4" in prompt
+    assert "metadata only; content not parsed" in prompt
+    assert "C:/private/videos" not in prompt
+    saved = database.get_messages(conversation_id)[0]
+    assert saved["content"] == "Uploaded file"
+    assert saved["attachments"] == [attachment]
