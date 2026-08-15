@@ -15,6 +15,9 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "response_style": "Balanced",
     "internet_search_enabled": "true",
     "memory_enabled": "true",
+    "read_aloud_enabled": "true",
+    "voice_name": "",
+    "speech_rate": "0",
 }
 
 
@@ -29,6 +32,9 @@ class AngelSettings:
     response_style: str
     internet_search_enabled: bool
     memory_enabled: bool
+    read_aloud_enabled: bool
+    voice_name: str
+    speech_rate: int
 
     @property
     def location(self) -> str:
@@ -58,6 +64,9 @@ class SettingsService:
             response_style=style,
             internet_search_enabled=self._as_bool(values["internet_search_enabled"]),
             memory_enabled=self._as_bool(values["memory_enabled"]),
+            read_aloud_enabled=self._as_bool(values["read_aloud_enabled"]),
+            voice_name=values["voice_name"].strip(),
+            speech_rate=self._as_speech_rate(values["speech_rate"]),
         )
 
     def update(self, **values: object) -> AngelSettings:
@@ -79,6 +88,8 @@ class SettingsService:
             "Detailed",
         }:
             cleaned["response_style"] = current.response_style
+        if "speech_rate" in cleaned:
+            cleaned["speech_rate"] = str(self._as_speech_rate(cleaned["speech_rate"]))
         self.database.set_settings(cleaned)
         return self.get()
 
@@ -92,3 +103,11 @@ class SettingsService:
         if not candidate.startswith(("http://", "https://")):
             raise ValueError("Ollama URL must begin with http:// or https://")
         return candidate
+
+    @staticmethod
+    def _as_speech_rate(value: str) -> int:
+        try:
+            rate = int(str(value).strip())
+        except ValueError:
+            return 0
+        return max(-10, min(10, rate))

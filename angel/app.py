@@ -19,6 +19,7 @@ from .paths import app_data_dir, database_path
 from .recommendations import QUICK_ACTIONS, RecommendationService
 from .search import SearchService
 from .settings import SettingsService
+from .speech import WindowsSpeechService
 from .tools import create_tool_registry
 from .ui import AngelUI
 
@@ -35,6 +36,7 @@ class AppServices:
     recommendations: RecommendationService
     context: ContextBuilder
     brain: AngelBrain
+    speech: WindowsSpeechService
 
 
 def create_services(data_dir: str | Path | None = None) -> AppServices:
@@ -59,6 +61,7 @@ def create_services(data_dir: str | Path | None = None) -> AppServices:
         recommendations,
         logger.getChild("brain"),
     )
+    speech = WindowsSpeechService(logger.getChild("speech"))
     return AppServices(
         resolved_data_dir,
         logger,
@@ -70,6 +73,7 @@ def create_services(data_dir: str | Path | None = None) -> AppServices:
         recommendations,
         context,
         brain,
+        speech,
     )
 
 
@@ -88,6 +92,8 @@ def acceptance_checks(
         "web_search": "NOT TESTED",
         "sources": 0,
         "ui_opened": False,
+        "windows_speech_available": False,
+        "windows_voices": [],
     }
     conversation_id = services.database.create_conversation("Acceptance Check")
     services.database.add_message(conversation_id, "user", "Persistence check")
@@ -112,6 +118,9 @@ def acceptance_checks(
     online, models = services.ollama.check(saved_settings.ollama_url)
     report["ollama_detected"] = online
     report["models"] = models
+    voices = services.speech.list_voices()
+    report["windows_speech_available"] = bool(voices)
+    report["windows_voices"] = voices
     if live_model and online and models:
         try:
             response = services.ollama.chat(
@@ -171,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
             services.brain,
             services.ollama,
             services.logger.getChild("ui"),
+            services.speech,
         )
     except Exception as exc:
         services.logger.exception("Angel UI startup failed")

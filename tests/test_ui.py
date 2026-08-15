@@ -32,13 +32,33 @@ class UnusedBrain:
         return BrainResponse("unused", local_ai_available=False)
 
 
+class FakeSpeech:
+    def __init__(self):
+        self.calls = []
+        self.stop_count = 0
+
+    def list_voices(self):
+        return ["Test Windows Voice"]
+
+    def speak(self, text, voice_name="", rate=0):
+        self.calls.append((text, voice_name, rate))
+        return True
+
+    def stop(self):
+        self.stop_count += 1
+
+    def close(self):
+        self.stop()
+
+
 def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch, tmp_path):
     database, settings, memory = services
     root = tk.Tk()
     root.withdraw()
     brain = UnusedBrain()
     ollama = WaitingOllama()
-    ui = AngelUI(root, database, settings, memory, brain, ollama)
+    speech = FakeSpeech()
+    ui = AngelUI(root, database, settings, memory, brain, ollama, speech=speech)
     try:
         ui.chat.configure(state="normal")
         ui.chat.delete("1.0", "end")
@@ -106,6 +126,24 @@ def test_sources_are_visibly_labeled_and_clickable(services, monkeypatch, tmp_pa
                 time.sleep(0.01)
             assert ui.busy is False
         assert [mode for mode in brain.modes if mode] == list(QUICK_ACTIONS)
+        deadline = time.monotonic() + 2
+        while ui.speech_future is not None and time.monotonic() < deadline:
+            root.update()
+            time.sleep(0.01)
+        assert speech.calls
+        assert speech.calls[-1] == ("unused", "", 0)
+
+        settings.update(read_aloud_enabled=False)
+        ui.auto_read_var.set(False)
+        calls_before_manual_read = len(speech.calls)
+        ui.read_last_reply()
+        deadline = time.monotonic() + 2
+        while ui.speech_future is not None and time.monotonic() < deadline:
+            root.update()
+            time.sleep(0.01)
+        assert len(speech.calls) == calls_before_manual_read + 1
+        ui.stop_speaking()
+        assert speech.stop_count > 0
 
         delete_id = int(ui.current_conversation_id)
         database.add_message(delete_id, "user", "Delete this with the conversation")

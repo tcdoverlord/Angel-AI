@@ -24,6 +24,8 @@ account, and contains no telemetry, analytics, or tracking.
 - Accepts multiple images, audio files, videos, documents, archives, and arbitrary
   file types from the message composer. Text-like files receive a bounded local text
   extraction; unsupported formats remain honest metadata-only attachments.
+- Reads Angel replies aloud through voices already installed in Windows, with automatic
+  reading, replay, stop, voice selection, and speaking-speed controls.
 - Offers One More Thing, Make Money, Get Me Out, Build Something, Something Free, and
   Surprise Me through the same Angel brain and conversation.
 - Tracks recent suggestions locally to reduce repetition and can mark the latest idea
@@ -73,6 +75,11 @@ In the message composer, press **Enter** to send and **Shift+Enter** to insert a
 line. **Upload Files** accepts up to 20 unique files with no extension allowlist. Angel
 does not pretend to see, hear, or parse formats the selected local model cannot use.
 
+Angel automatically reads new replies aloud by default. Use **Read Last Reply** to hear
+the latest answer again or **Stop Voice** to stop immediately. The automatic-reading
+checkbox is above the conversation. Select an installed Windows voice and speaking
+speed under **Settings → Angel**. Speech stays local and requires no cloud voice service.
+
 ## Build Angel.exe
 
 Double-click `BUILD-ANGEL.bat`, or run it from a terminal. The script:
@@ -85,8 +92,8 @@ Double-click `BUILD-ANGEL.bat`, or run it from a terminal. The script:
 6. packages the native window with PyInstaller; and
 7. writes `dist\Angel.exe`.
 
-Build intermediates stay in `build\`, and both build intermediates and the virtual
-environment are ignored by Git.
+Build intermediates stay in `build\`, test scratch files stay in `test-output\`, and
+both those directories and the virtual environment are ignored by Git.
 
 ## Conversations
 
@@ -144,7 +151,8 @@ Settings includes:
 - display name and optional city, state/region, and ZIP/postal code;
 - concise, balanced, or detailed response style;
 - internet search enable/disable; and
-- memory enable/disable.
+- memory enable/disable; and
+- automatic read-aloud, installed Windows voice selection, and speaking speed.
 
 Approximate location remains local unless it is needed as part of a search query. Angel
 does not request GPS or precise location.
@@ -218,6 +226,7 @@ Angel/
 │   ├── context.py              bounded model context construction
 │   ├── recommendations.py      quick actions and suggestion history
 │   ├── ollama_client.py        model-neutral Ollama HTTP client
+│   ├── speech.py               Windows built-in voice discovery and text-to-speech
 │   ├── paths.py                source/packaged and local-data paths
 │   └── logging_setup.py        rotating local log
 └── tests/                      offline mocked regression suite

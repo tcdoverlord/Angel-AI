@@ -17,6 +17,7 @@ from .ollama_client import OllamaClient
 from .recommendations import QUICK_ACTIONS
 from .search import is_safe_public_url
 from .settings import AngelSettings, SettingsService
+from .speech import WindowsSpeechService
 
 
 COLORS = {
@@ -87,6 +88,7 @@ class AngelUI:
         brain: AngelBrain,
         ollama: OllamaClient,
         logger: logging.Logger | None = None,
+        speech: WindowsSpeechService | None = None,
     ) -> None:
         self.root = root
         self.database = database
@@ -95,6 +97,7 @@ class AngelUI:
         self.brain = brain
         self.ollama = ollama
         self.logger = logger or logging.getLogger("angel.ui")
+        self.speech = speech or WindowsSpeechService(self.logger.getChild("speech"))
         self.executor = BackgroundRunner(maximum=3)
         self.ui_queue: queue.Queue[tuple[str, Any]] = queue.Queue()
         self.closing = False
@@ -102,6 +105,8 @@ class AngelUI:
         self.current_conversation_id: int | None = None
         self.conversation_ids: list[int] = []
         self.pending_attachments: list[dict[str, Any]] = []
+        self.last_assistant_text = ""
+        self.speech_future: Future[bool] | None = None
         self.source_tag_counter = 0
         self._configure_window()
         self._configure_style()
@@ -291,8 +296,46 @@ class AngelUI:
 
         conversation = tk.Frame(body, bg=COLORS["panel"], padx=16, pady=12)
         conversation.grid(row=0, column=1, sticky="nsew")
-        conversation.grid_rowconfigure(0, weight=1)
+        conversation.grid_rowconfigure(1, weight=1)
         conversation.grid_columnconfigure(0, weight=1)
+        voice_controls = tk.Frame(conversation, bg=COLORS["panel"], pady=3)
+        voice_controls.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 7))
+        voice_controls.grid_columnconfigure(3, weight=1)
+        ttk.Button(
+            voice_controls,
+            text="Read Last Reply",
+            style="Angel.TButton",
+            command=self.read_last_reply,
+        ).grid(row=0, column=0, padx=(0, 7))
+        ttk.Button(
+            voice_controls,
+            text="Stop Voice",
+            style="Angel.TButton",
+            command=self.stop_speaking,
+        ).grid(row=0, column=1, padx=(0, 10))
+        self.auto_read_var = tk.BooleanVar(
+            value=self.settings.get().read_aloud_enabled
+        )
+        tk.Checkbutton(
+            voice_controls,
+            text="Automatically read Angel replies",
+            variable=self.auto_read_var,
+            command=self._toggle_auto_read,
+            bg=COLORS["panel"],
+            fg=COLORS["white"],
+            selectcolor=COLORS["panel_alt"],
+            activebackground=COLORS["panel"],
+            activeforeground=COLORS["white"],
+        ).grid(row=0, column=2, sticky="w")
+        self.voice_status = tk.Label(
+            voice_controls,
+            text="Voice · Windows",
+            bg=COLORS["panel"],
+            fg=COLORS["muted"],
+            font=("Segoe UI", 9),
+            anchor="e",
+        )
+        self.voice_status.grid(row=0, column=3, sticky="e")
         self.chat = tk.Text(
             conversation,
             bg=COLORS["panel"],
@@ -310,8 +353,8 @@ class AngelUI:
         )
         scrollbar = ttk.Scrollbar(conversation, orient="vertical", command=self.chat.yview)
         self.chat.configure(yscrollcommand=scrollbar.set)
-        self.chat.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
+        self.chat.grid(row=1, column=0, sticky="nsew")
+        scrollbar.grid(row=1, column=1, sticky="ns")
         self.chat.tag_configure("user_label", foreground=COLORS["gold"], font=("Segoe UI Semibold", 10))
         self.chat.tag_configure("angel_label", foreground=COLORS["electric"], font=("Segoe UI Semibold", 10))
         self.chat.tag_configure("user_text", foreground=COLORS["white"], lmargin1=16, lmargin2=16)
@@ -468,6 +511,8 @@ class AngelUI:
         self.load_conversation(conversation_id)
 
     def load_conversation(self, conversation_id: int) -> None:
+        self.stop_speaking(update_status=False)
+        self.last_assistant_text = ""
         self.chat.configure(state="normal")
         self.chat.delete("1.0", "end")
         messages = self.database.get_messages(conversation_id, limit=200)
@@ -499,6 +544,8 @@ class AngelUI:
         sources: list[dict[str, str]] | None = None,
         attachments: list[dict[str, Any]] | None = None,
     ) -> None:
+        if role == "assistant":
+            self.last_assistant_text = content.strip()
         self.chat.insert("end", "You\n" if role == "user" else "Angel\n", "user_label" if role == "user" else "angel_label")
         self.chat.insert("end", content.strip() + "\n", "user_text" if role == "user" else "angel_text")
         if role == "user" and attachments:
@@ -529,6 +576,54 @@ class AngelUI:
                 self.chat.tag_bind(tag, "<Leave>", lambda _event: self.chat.configure(cursor="xterm"))
                 self.chat.insert("end", f"  {title} — {domain}\n", tag)
         self.chat.insert("end", "\n")
+
+    def _toggle_auto_read(self) -> None:
+        self.settings.update(read_aloud_enabled=bool(self.auto_read_var.get()))
+
+    def read_last_reply(self) -> None:
+        if not self.last_assistant_text:
+            self.voice_status.configure(text="Voice · No reply yet", fg=COLORS["muted"])
+            return
+        self.read_aloud(self.last_assistant_text)
+
+    def read_aloud(
+        self,
+        text: str,
+        voice_name: str | None = None,
+        rate: int | None = None,
+    ) -> None:
+        if not text.strip() or self.closing:
+            return
+        self.stop_speaking(update_status=False)
+        current = self.settings.get()
+        selected_voice = current.voice_name if voice_name is None else voice_name
+        selected_rate = current.speech_rate if rate is None else rate
+        self.voice_status.configure(text="Voice · Speaking…", fg=COLORS["electric"])
+        future = self.executor.submit(
+            self.speech.speak, text, selected_voice, selected_rate
+        )
+        self.speech_future = future
+        self._poll_future(future, self._speech_finished)
+
+    def _speech_finished(self, future: Future[bool]) -> None:
+        if self.closing or future is not self.speech_future:
+            return
+        self.speech_future = None
+        try:
+            successful = bool(future.result())
+        except Exception:
+            self.logger.exception("Read aloud failed")
+            successful = False
+        self.voice_status.configure(
+            text="Voice · Ready" if successful else "Voice · Unavailable",
+            fg=COLORS["good"] if successful else COLORS["bad"],
+        )
+
+    def stop_speaking(self, update_status: bool = True) -> None:
+        self.speech_future = None
+        self.speech.stop()
+        if update_status and hasattr(self, "voice_status") and not self.closing:
+            self.voice_status.configure(text="Voice · Stopped", fg=COLORS["muted"])
 
     def send_message(self) -> None:
         text = self.input_box.get("1.0", "end").strip()
@@ -650,6 +745,8 @@ class AngelUI:
             self._insert_message("assistant", response.content, response.sources)
             self.chat.configure(state="disabled")
             self.chat.see("end")
+            if self.settings.get().read_aloud_enabled:
+                self.read_aloud(response.content)
         self.refresh_conversations(select_id=self.current_conversation_id)
         self.ai_status.configure(
             text="Local AI · Online" if response.local_ai_available else "Local AI · Offline",
@@ -788,8 +885,8 @@ class AngelUI:
         current = self.settings.get()
         window = tk.Toplevel(self.root)
         window.title("Angel Settings")
-        window.geometry("700x590")
-        window.minsize(620, 520)
+        window.geometry("700x650")
+        window.minsize(620, 580)
         window.configure(bg=COLORS["charcoal"])
         window.transient(self.root)
         notebook = ttk.Notebook(window)
@@ -812,6 +909,9 @@ class AngelUI:
             "response_style": tk.StringVar(value=current.response_style),
             "internet_search_enabled": tk.BooleanVar(value=current.internet_search_enabled),
             "memory_enabled": tk.BooleanVar(value=current.memory_enabled),
+            "read_aloud_enabled": tk.BooleanVar(value=current.read_aloud_enabled),
+            "voice_name": tk.StringVar(value=current.voice_name or "System default"),
+            "speech_rate": tk.StringVar(value=str(current.speech_rate)),
         }
 
         def labeled_entry(parent: tk.Widget, label: str, variable: tk.StringVar, row: int) -> tk.Entry:
@@ -860,6 +960,67 @@ class AngelUI:
         ttk.Combobox(angel_tab, textvariable=variables["response_style"], values=("Concise", "Balanced", "Detailed"), state="readonly", style="Angel.TCombobox").pack(fill="x", ipady=5)
         tk.Checkbutton(angel_tab, text="Enable Internet Search", variable=variables["internet_search_enabled"], bg=COLORS["charcoal"], fg=COLORS["white"], selectcolor=COLORS["panel_alt"], activebackground=COLORS["charcoal"], activeforeground=COLORS["white"]).pack(anchor="w", pady=(18, 6))
         tk.Checkbutton(angel_tab, text="Enable Memory", variable=variables["memory_enabled"], bg=COLORS["charcoal"], fg=COLORS["white"], selectcolor=COLORS["panel_alt"], activebackground=COLORS["charcoal"], activeforeground=COLORS["white"]).pack(anchor="w", pady=6)
+        tk.Checkbutton(angel_tab, text="Automatically read Angel replies", variable=variables["read_aloud_enabled"], bg=COLORS["charcoal"], fg=COLORS["white"], selectcolor=COLORS["panel_alt"], activebackground=COLORS["charcoal"], activeforeground=COLORS["white"]).pack(anchor="w", pady=(12, 6))
+        tk.Label(angel_tab, text="Windows Voice", bg=COLORS["charcoal"], fg=COLORS["muted"], anchor="w").pack(fill="x", pady=(8, 3))
+        voice_box = ttk.Combobox(
+            angel_tab,
+            textvariable=variables["voice_name"],
+            values=("System default",),
+            state="readonly",
+            style="Angel.TCombobox",
+        )
+        voice_box.pack(fill="x", ipady=5)
+        tk.Label(angel_tab, text="Speaking Speed (-10 slow to 10 fast)", bg=COLORS["charcoal"], fg=COLORS["muted"], anchor="w").pack(fill="x", pady=(12, 3))
+        ttk.Combobox(
+            angel_tab,
+            textvariable=variables["speech_rate"],
+            values=tuple(str(value) for value in range(-10, 11)),
+            state="readonly",
+            style="Angel.TCombobox",
+        ).pack(fill="x", ipady=5)
+        voice_row = tk.Frame(angel_tab, bg=COLORS["charcoal"])
+        voice_row.pack(fill="x", pady=(10, 0))
+        voice_message = tk.Label(
+            voice_row,
+            text="Loading voices…",
+            bg=COLORS["charcoal"],
+            fg=COLORS["muted"],
+        )
+        voice_message.pack(side="right")
+
+        def preview_voice() -> None:
+            selected = str(variables["voice_name"].get())
+            voice = "" if selected == "System default" else selected
+            try:
+                rate = int(str(variables["speech_rate"].get()))
+            except ValueError:
+                rate = 0
+            self.read_aloud("Hello. I am Angel, using a Windows voice.", voice, rate)
+
+        ttk.Button(
+            voice_row,
+            text="Test Voice",
+            style="Angel.TButton",
+            command=preview_voice,
+        ).pack(side="left")
+
+        def voices_finished(future: Future[list[str]]) -> None:
+            try:
+                voices = future.result()
+            except Exception:
+                voices = []
+            values = ("System default", *voices)
+            voice_box.configure(values=values)
+            selected = str(variables["voice_name"].get())
+            if selected not in values:
+                variables["voice_name"].set("System default")
+            voice_message.configure(
+                text=f"{len(voices)} installed voice(s)" if voices else "Windows voice unavailable",
+                fg=COLORS["good"] if voices else COLORS["bad"],
+            )
+
+        voices_future = self.executor.submit(self.speech.list_voices)
+        self._poll_future(voices_future, voices_finished)
 
         about_text = (
             "ANGEL\nLocal Personal AI\n\n"
@@ -871,10 +1032,14 @@ class AngelUI:
 
         def save() -> None:
             try:
-                self.settings.update(**{key: variable.get() for key, variable in variables.items()})
+                values = {key: variable.get() for key, variable in variables.items()}
+                if values["voice_name"] == "System default":
+                    values["voice_name"] = ""
+                updated = self.settings.update(**values)
             except Exception as exc:
                 messagebox.showerror("Angel Settings", str(exc), parent=window)
                 return
+            self.auto_read_var.set(updated.read_aloud_enabled)
             window.destroy()
             self.refresh_status()
 
@@ -917,6 +1082,7 @@ class AngelUI:
             return
         self.closing = True
         self.logger.info("Angel shutdown requested")
+        self.speech.close()
         self.executor.shutdown(wait=False, cancel_futures=True)
         try:
             self.root.destroy()

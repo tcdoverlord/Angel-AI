@@ -20,7 +20,8 @@ echo [Angel] Installing build requirements...
 if errorlevel 1 exit /b 1
 
 echo [Angel] Running automated tests...
-".venv\Scripts\python.exe" -m pytest -q tests -p no:cacheprovider
+if not exist "test-output" mkdir "test-output"
+".venv\Scripts\python.exe" -m pytest -q tests -p no:cacheprovider --basetemp "test-output\pytest-build"
 if errorlevel 1 (
     echo [Angel] Tests failed. Packaging stopped.
     exit /b 1
