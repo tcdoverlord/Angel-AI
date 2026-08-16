@@ -6,6 +6,7 @@ import socket
 import urllib.error
 import urllib.parse
 import urllib.request
+import ipaddress
 from typing import Any
 
 
@@ -25,9 +26,23 @@ class OllamaClient:
             raise OllamaError("Ollama URL is invalid")
         return base_url.rstrip("/") + path
 
-    def list_models(self, base_url: str) -> list[str]:
+    @staticmethod
+    def is_local_url(base_url: str) -> bool:
+        try:
+            host = (urllib.parse.urlparse(base_url).hostname or "").lower()
+            if host in {"localhost", "localhost.localdomain"}:
+                return True
+            return ipaddress.ip_address(host).is_loopback
+        except (ValueError, TypeError):
+            return False
+
+    def list_model_details(self, base_url: str) -> list[dict[str, Any]]:
         payload = self._request(base_url, "/api/tags", method="GET", timeout=5.0)
         models = payload.get("models", []) if isinstance(payload, dict) else []
+        return [dict(model) for model in models if isinstance(model, dict)]
+
+    def list_models(self, base_url: str) -> list[str]:
+        models = self.list_model_details(base_url)
         names: list[str] = []
         for model in models:
             if isinstance(model, dict):

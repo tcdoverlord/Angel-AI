@@ -12,6 +12,8 @@ from .database import Database
 from .memory import MemoryDisabledError, MemoryService
 from .search import SearchService, SearchUnavailableError
 from .settings import SettingsService
+from .projects import ProjectService
+from .knowledge import KnowledgeService
 
 
 TOOL_MARKER = "ANGEL_TOOL_REQUEST"
@@ -48,6 +50,14 @@ class ToolResult:
     sources: list[dict[str, str]] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class ToolDefinition:
+    name: str
+    description: str
+    permission: str
+    timeout_seconds: float
+
+
 def parse_tool_request(text: str) -> ToolRequest | None:
     """Parse the single strict JSON tool envelope used with small local models."""
     marker_index = text.find(TOOL_MARKER)
@@ -77,16 +87,35 @@ class ToolRegistry:
         self.database = database
         self.logger = logger or logging.getLogger("angel.tools")
         self._tools: dict[str, Callable[..., ToolResult]] = {}
+        self._definitions: dict[str, ToolDefinition] = {}
 
     @property
     def names(self) -> tuple[str, ...]:
         return tuple(sorted(self._tools))
 
-    def register(self, name: str, handler: Callable[..., ToolResult]) -> None:
+    @property
+    def definitions(self) -> tuple[ToolDefinition, ...]:
+        return tuple(self._definitions[name] for name in sorted(self._definitions))
+
+    def register(
+        self,
+        name: str,
+        handler: Callable[..., ToolResult],
+        *,
+        description: str = "",
+        permission: str = "SAFE",
+        timeout_seconds: float = 10.0,
+    ) -> None:
         clean_name = name.strip()
         if not re.fullmatch(r"[a-z][a-z0-9_]*", clean_name):
             raise ValueError("Tool name must be a lowercase identifier")
         self._tools[clean_name] = handler
+        self._definitions[clean_name] = ToolDefinition(
+            clean_name,
+            description.strip() or clean_name.replace("_", " "),
+            permission,
+            max(0.1, float(timeout_seconds)),
+        )
 
     def execute(self, request: ToolRequest) -> ToolResult:
         handler = self._tools.get(request.name)
@@ -119,11 +148,16 @@ def create_tool_registry(
     memory: MemoryService,
     search: SearchService,
     logger: logging.Logger | None = None,
+    projects: ProjectService | None = None,
+    knowledge: KnowledgeService | None = None,
 ) -> ToolRegistry:
     registry = ToolRegistry(database, logger)
 
     def search_web(query: str, limit: int = 5) -> ToolResult:
-        if not settings.get().internet_search_enabled:
+        current = settings.get()
+        if current.connectivity_mode == "Offline":
+            return ToolResult("search_web", False, "Angel is in Offline mode; external network tools are blocked")
+        if not current.internet_search_enabled:
             return ToolResult("search_web", False, "Internet search is disabled in Angel Settings")
         results = search.search(str(query), int(limit))
         sources = [result.as_dict() for result in results]
@@ -179,11 +213,53 @@ def create_tool_registry(
             data=data,
         )
 
-    registry.register("search_web", search_web)
-    registry.register("remember", remember)
-    registry.register("search_memory", search_memory)
-    registry.register("forget_memory", forget_memory)
-    registry.register("current_datetime", current_datetime)
+    def search_projects(query: str, limit: int = 5) -> ToolResult:
+        if projects is None:
+            return ToolResult("search_projects", False, "Project Memory is unavailable")
+        items = projects.list(str(query), max(1, min(int(limit), 10)))
+        if not items:
+            return ToolResult("search_projects", True, "No matching projects were found", data=[])
+        content = "Matching projects:\n" + "\n".join(
+            f"#{item['id']} {item['name']} [{item['status']}]: {item['current_state'] or item['description']}"
+            for item in items
+        )
+        return ToolResult("search_projects", True, content, data=items)
+
+    def project_details(project_id: int) -> ToolResult:
+        if projects is None:
+            return ToolResult("project_details", False, "Project Memory is unavailable")
+        project = projects.get(int(project_id))
+        items = projects.items(int(project_id), limit=30)
+        content = (
+            f"Project #{project['id']}: {project['name']} [{project['status']}]\n"
+            f"Description: {project['description']}\nCurrent state: {project['current_state']}\n"
+            + "\n".join(
+                f"- [{item['kind']}/{item['status']}] {item['title']}: {item['content']}" for item in items
+            )
+        )
+        return ToolResult("project_details", True, content, data={"project": project, "items": items})
+
+    def search_knowledge(query: str, limit: int = 5) -> ToolResult:
+        if knowledge is None:
+            return ToolResult("search_knowledge", False, "Knowledge Library is unavailable")
+        items = knowledge.search(str(query), max(1, min(int(limit), 10)))
+        if not items:
+            return ToolResult("search_knowledge", True, "No indexed knowledge matched", data=[])
+        content = "Local knowledge matches:\n\n" + "\n\n".join(
+            f"{item['title']} (chunk {int(item['chunk_index']) + 1}):\n{item['content']}" for item in items
+        )
+        return ToolResult("search_knowledge", True, content, data=items)
+
+    registry.register("search_web", search_web, description="Search current public information", permission="INTERNET", timeout_seconds=12)
+    registry.register("remember", remember, description="Save intentional long-term memory", permission="SAFE")
+    registry.register("search_memory", search_memory, description="Search long-term memory", permission="SAFE")
+    registry.register("forget_memory", forget_memory, description="Delete one memory by ID", permission="FILE WRITE")
+    registry.register("current_datetime", current_datetime, description="Read local date and time", permission="SAFE")
+    if projects is not None:
+        registry.register("search_projects", search_projects, description="Search persistent projects", permission="SAFE")
+        registry.register("project_details", project_details, description="Read one project's state", permission="SAFE")
+    if knowledge is not None:
+        registry.register("search_knowledge", search_knowledge, description="Search locally indexed documents", permission="SAFE")
     return registry
 
 

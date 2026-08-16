@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 import mimetypes
+import json
+import struct
+import wave
+import zipfile
+import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -15,6 +21,7 @@ TEXT_EXTENSIONS = {
     ".css",
     ".csv",
     ".html",
+    ".htm",
     ".ini",
     ".js",
     ".json",
@@ -79,12 +86,13 @@ def prepare_attachments(paths: Iterable[str | Path]) -> list[dict[str, Any]]:
             "size": size,
             "parse_status": "metadata_only",
             "text_excerpt": "",
+            "metadata": {},
         }
-        if kind == "text":
-            excerpt = _read_text_excerpt(path)
-            if excerpt:
-                attachment["parse_status"] = "text_extracted"
-                attachment["text_excerpt"] = excerpt
+        status, excerpt, metadata = extract_file_text(path, MAX_EXCERPT_CHARS)
+        attachment["metadata"] = metadata
+        if excerpt:
+            attachment["parse_status"] = status
+            attachment["text_excerpt"] = excerpt
         attachments.append(attachment)
     return attachments
 
@@ -106,6 +114,12 @@ def attachment_context(attachments: list[dict[str, Any]]) -> str:
             f"File: {name}\nType: {kind} ({mime_type})\nSize: {format_size(size)}\n"
             f"Availability: {'text excerpt available' if status == 'text_extracted' else 'metadata only; content not parsed'}"
         )
+        metadata = attachment.get("metadata")
+        if isinstance(metadata, dict) and metadata:
+            safe_metadata = ", ".join(
+                f"{key}: {value}" for key, value in list(metadata.items())[:12]
+            )
+            sections.append(f"Local metadata for {name}: {safe_metadata}")
         excerpt = str(attachment.get("text_excerpt") or "")
         if status == "text_extracted" and excerpt:
             sections.append(f"Extracted text from {name}:\n{excerpt[:MAX_EXCERPT_CHARS]}")
@@ -121,9 +135,14 @@ def format_size(size: int) -> str:
     return f"{size} B"
 
 
-def _read_text_excerpt(path: Path) -> str:
+def _read_text_excerpt(
+    path: Path,
+    maximum_chars: int = MAX_EXCERPT_CHARS,
+    maximum_bytes: int = MAX_READ_BYTES,
+) -> str:
     try:
-        data = path.read_bytes()[:MAX_READ_BYTES]
+        with path.open("rb") as handle:
+            data = handle.read(maximum_bytes)
     except OSError:
         return ""
     if not data or b"\x00" in data[:4_096]:
@@ -133,6 +152,141 @@ def _read_text_excerpt(path: Path) -> str:
     if replacement_ratio > 0.05:
         return ""
     clean = text.strip()
-    if len(clean) > MAX_EXCERPT_CHARS:
-        clean = clean[:MAX_EXCERPT_CHARS] + "\n[Text excerpt truncated by Angel]"
+    if len(clean) > maximum_chars:
+        clean = clean[:maximum_chars] + "\n[Text excerpt truncated by Angel]"
     return clean
+
+
+class _PlainHTML(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        clean = " ".join(data.split())
+        if clean:
+            self.parts.append(clean)
+
+
+def extract_file_text(
+    path: str | Path, maximum_chars: int = MAX_EXCERPT_CHARS
+) -> tuple[str, str, dict[str, Any]]:
+    """Locally parse supported files without claiming unsupported content was read."""
+    target = Path(path)
+    suffix = target.suffix.lower()
+    text = ""
+    metadata: dict[str, Any] = {}
+    try:
+        if suffix in TEXT_EXTENSIONS:
+            text = _read_text_excerpt(
+                target,
+                maximum_chars=maximum_chars,
+                maximum_bytes=max(MAX_READ_BYTES, min(8_000_000, maximum_chars * 4)),
+            )
+            if suffix in {".html", ".htm"} and text:
+                parser = _PlainHTML()
+                parser.feed(text)
+                text = "\n".join(parser.parts)
+            elif suffix == ".json" and text:
+                try:
+                    text = json.dumps(json.loads(text), ensure_ascii=False, indent=2)
+                except json.JSONDecodeError:
+                    pass
+        elif suffix == ".docx":
+            text = _docx_text(target)
+        elif suffix == ".xlsx":
+            text = _xlsx_text(target)
+        elif suffix == ".pdf":
+            text = _pdf_text(target)
+        elif suffix == ".wav":
+            with wave.open(str(target), "rb") as audio:
+                frames = audio.getnframes()
+                rate = audio.getframerate()
+                metadata = {
+                    "duration_seconds": round(frames / rate, 2) if rate else 0,
+                    "channels": audio.getnchannels(),
+                    "sample_rate": rate,
+                    "sample_width_bytes": audio.getsampwidth(),
+                }
+        elif suffix in {".png", ".gif", ".jpg", ".jpeg"}:
+            metadata = _image_metadata(target)
+    except (OSError, ValueError, ET.ParseError, zipfile.BadZipFile):
+        return "metadata_only", "", metadata
+    clean = text.strip()
+    if not clean:
+        return "metadata_only", "", metadata
+    if len(clean) > maximum_chars:
+        clean = clean[:maximum_chars].rstrip() + "\n[Text excerpt truncated by Angel]"
+    return "text_extracted", clean, metadata
+
+
+def _docx_text(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        root = ET.fromstring(archive.read("word/document.xml"))
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    paragraphs: list[str] = []
+    for paragraph in root.iter(namespace + "p"):
+        line = "".join(node.text or "" for node in paragraph.iter(namespace + "t"))
+        if line.strip():
+            paragraphs.append(line.strip())
+    return "\n".join(paragraphs)
+
+
+def _xlsx_text(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        shared: list[str] = []
+        if "xl/sharedStrings.xml" in archive.namelist():
+            root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+            shared = ["".join(node.text or "" for node in item.iter() if node.tag.endswith("}t")) for item in root]
+        lines: list[str] = []
+        sheets = sorted(name for name in archive.namelist() if name.startswith("xl/worksheets/sheet") and name.endswith(".xml"))
+        for sheet_name in sheets[:20]:
+            root = ET.fromstring(archive.read(sheet_name))
+            lines.append(f"[{Path(sheet_name).stem}]")
+            for row in (node for node in root.iter() if node.tag.endswith("}row")):
+                values: list[str] = []
+                for cell in (node for node in row if node.tag.endswith("}c")):
+                    cell_type = cell.attrib.get("t", "")
+                    value_node = next((node for node in cell.iter() if node.tag.endswith("}v")), None)
+                    value = value_node.text if value_node is not None and value_node.text else ""
+                    if cell_type == "s" and value.isdigit() and int(value) < len(shared):
+                        value = shared[int(value)]
+                    elif cell_type == "inlineStr":
+                        value = "".join(node.text or "" for node in cell.iter() if node.tag.endswith("}t"))
+                    values.append(value)
+                if any(values):
+                    lines.append("\t".join(values))
+    return "\n".join(lines)
+
+
+def _pdf_text(path: Path) -> str:
+    try:
+        from pypdf import PdfReader  # type: ignore[import-not-found]
+    except ImportError:
+        return ""
+    reader = PdfReader(str(path))
+    return "\n\n".join((page.extract_text() or "").strip() for page in reader.pages[:200])
+
+
+def _image_metadata(path: Path) -> dict[str, Any]:
+    data = path.read_bytes()[:512_000]
+    if data.startswith(b"\x89PNG\r\n\x1a\n") and len(data) >= 24:
+        width, height = struct.unpack(">II", data[16:24])
+        return {"width": width, "height": height}
+    if data[:6] in {b"GIF87a", b"GIF89a"} and len(data) >= 10:
+        width, height = struct.unpack("<HH", data[6:10])
+        return {"width": width, "height": height}
+    if data.startswith(b"\xff\xd8"):
+        index = 2
+        while index + 9 < len(data):
+            if data[index] != 0xFF:
+                index += 1
+                continue
+            marker = data[index + 1]
+            length = int.from_bytes(data[index + 2 : index + 4], "big")
+            if marker in range(0xC0, 0xC4) and length >= 7:
+                height = int.from_bytes(data[index + 5 : index + 7], "big")
+                width = int.from_bytes(data[index + 7 : index + 9], "big")
+                return {"width": width, "height": height}
+            index += max(2, length + 2)
+    return {}

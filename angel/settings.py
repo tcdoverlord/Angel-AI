@@ -18,6 +18,21 @@ DEFAULT_SETTINGS: dict[str, str] = {
     "read_aloud_enabled": "true",
     "voice_name": "",
     "speech_rate": "0",
+    "connectivity_mode": "Auto",
+    "resource_profile": "Balanced",
+    "technical_level": "Plain language first",
+    "formatting_preference": "Natural",
+    "workflow_preferences": "",
+    "active_project_id": "",
+    "auto_start_ollama": "true",
+    "coding_model": "",
+    "vision_model": "",
+    "embedding_model": "Local hashed embeddings",
+    "comfyui_url": "http://127.0.0.1:8188",
+    "comfyui_model": "",
+    "acestep_url": "http://127.0.0.1:8001",
+    "acestep_model": "",
+    "knowledge_enabled": "true",
 }
 
 
@@ -35,6 +50,21 @@ class AngelSettings:
     read_aloud_enabled: bool
     voice_name: str
     speech_rate: int
+    connectivity_mode: str
+    resource_profile: str
+    technical_level: str
+    formatting_preference: str
+    workflow_preferences: str
+    active_project_id: str
+    auto_start_ollama: bool
+    coding_model: str
+    vision_model: str
+    embedding_model: str
+    comfyui_url: str
+    comfyui_model: str
+    acestep_url: str
+    acestep_model: str
+    knowledge_enabled: bool
 
     @property
     def location(self) -> str:
@@ -54,6 +84,12 @@ class SettingsService:
         style = values["response_style"].title()
         if style not in {"Concise", "Balanced", "Detailed"}:
             style = "Balanced"
+        connectivity_mode = values["connectivity_mode"].title()
+        if connectivity_mode not in {"Offline", "Local + Internet Tools", "Auto"}:
+            connectivity_mode = "Auto"
+        resource_profile = values["resource_profile"].title()
+        if resource_profile not in {"Low Resource", "Balanced", "Maximum Quality"}:
+            resource_profile = "Balanced"
         return AngelSettings(
             ollama_url=self._safe_ollama_url(values["ollama_url"]),
             model=values["model"].strip() or DEFAULT_SETTINGS["model"],
@@ -67,6 +103,21 @@ class SettingsService:
             read_aloud_enabled=self._as_bool(values["read_aloud_enabled"]),
             voice_name=values["voice_name"].strip(),
             speech_rate=self._as_speech_rate(values["speech_rate"]),
+            connectivity_mode=connectivity_mode,
+            resource_profile=resource_profile,
+            technical_level=values["technical_level"].strip() or "Plain language first",
+            formatting_preference=values["formatting_preference"].strip() or "Natural",
+            workflow_preferences=values["workflow_preferences"].strip(),
+            active_project_id=values["active_project_id"].strip(),
+            auto_start_ollama=self._as_bool(values["auto_start_ollama"]),
+            coding_model=values["coding_model"].strip(),
+            vision_model=values["vision_model"].strip(),
+            embedding_model=values["embedding_model"].strip() or "Local hashed embeddings",
+            comfyui_url=self._safe_local_service_url(values["comfyui_url"], "http://127.0.0.1:8188"),
+            comfyui_model=values["comfyui_model"].strip(),
+            acestep_url=self._safe_local_service_url(values["acestep_url"], "http://127.0.0.1:8001"),
+            acestep_model=values["acestep_model"].strip(),
+            knowledge_enabled=self._as_bool(values["knowledge_enabled"]),
         )
 
     def update(self, **values: object) -> AngelSettings:
@@ -90,6 +141,20 @@ class SettingsService:
             cleaned["response_style"] = current.response_style
         if "speech_rate" in cleaned:
             cleaned["speech_rate"] = str(self._as_speech_rate(cleaned["speech_rate"]))
+        if "connectivity_mode" in cleaned and cleaned["connectivity_mode"].title() not in {
+            "Offline", "Local + Internet Tools", "Auto"
+        }:
+            cleaned["connectivity_mode"] = current.connectivity_mode
+        if "resource_profile" in cleaned and cleaned["resource_profile"].title() not in {
+            "Low Resource", "Balanced", "Maximum Quality"
+        }:
+            cleaned["resource_profile"] = current.resource_profile
+        for key, fallback in (
+            ("comfyui_url", current.comfyui_url),
+            ("acestep_url", current.acestep_url),
+        ):
+            if key in cleaned:
+                cleaned[key] = self._safe_local_service_url(cleaned[key], fallback)
         self.database.set_settings(cleaned)
         return self.get()
 
@@ -111,3 +176,14 @@ class SettingsService:
         except ValueError:
             return 0
         return max(-10, min(10, rate))
+
+    @classmethod
+    def _safe_local_service_url(cls, value: str, fallback: str) -> str:
+        candidate = value.strip().rstrip("/") or fallback
+        checked = cls._safe_ollama_url(candidate)
+        from urllib.parse import urlparse
+
+        host = (urlparse(checked).hostname or "").lower()
+        if host not in {"127.0.0.1", "localhost", "::1"}:
+            raise ValueError("Creator services must use localhost")
+        return checked

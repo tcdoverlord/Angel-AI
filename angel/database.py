@@ -14,6 +14,16 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+class AngelConnection(sqlite3.Connection):
+    """SQLite context manager that also closes its Windows file handle on exit."""
+
+    def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> bool:
+        try:
+            return bool(super().__exit__(exc_type, exc, traceback))
+        finally:
+            self.close()
+
+
 class Database:
     """Thread-safe, idempotently migrated SQLite storage for Angel."""
 
@@ -25,10 +35,11 @@ class Database:
         self.initialize()
 
     def connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=10)
+        connection = sqlite3.connect(self.path, timeout=10, factory=AngelConnection)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("PRAGMA busy_timeout = 10000")
+        connection.execute("PRAGMA synchronous = NORMAL")
         return connection
 
     @contextmanager
@@ -76,7 +87,93 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     text TEXT NOT NULL,
                     category TEXT NOT NULL DEFAULT 'general',
+                    title TEXT NOT NULL DEFAULT '',
+                    importance INTEGER NOT NULL DEFAULT 3,
+                    confidence REAL NOT NULL DEFAULT 0.8,
+                    last_used TEXT NOT NULL DEFAULT '',
+                    source_conversation_id INTEGER,
+                    tags_json TEXT NOT NULL DEFAULT '[]',
                     created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (source_conversation_id) REFERENCES conversations(id) ON DELETE SET NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS projects (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    description TEXT NOT NULL DEFAULT '',
+                    current_state TEXT NOT NULL DEFAULT '',
+                    status TEXT NOT NULL DEFAULT 'active',
+                    important_files_json TEXT NOT NULL DEFAULT '[]',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    last_activity TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS project_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_id INTEGER NOT NULL,
+                    kind TEXT NOT NULL DEFAULT 'note',
+                    status TEXT NOT NULL DEFAULT 'open',
+                    title TEXT NOT NULL DEFAULT '',
+                    content TEXT NOT NULL DEFAULT '',
+                    file_path TEXT NOT NULL DEFAULT '',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS conversation_summaries (
+                    conversation_id INTEGER PRIMARY KEY,
+                    through_message_id INTEGER NOT NULL DEFAULT 0,
+                    summary TEXT NOT NULL DEFAULT '',
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS knowledge_documents (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    source_path TEXT NOT NULL DEFAULT '',
+                    stored_path TEXT NOT NULL DEFAULT '',
+                    sha256 TEXT NOT NULL UNIQUE,
+                    mime_type TEXT NOT NULL DEFAULT 'application/octet-stream',
+                    size INTEGER NOT NULL DEFAULT 0,
+                    parse_status TEXT NOT NULL DEFAULT 'pending',
+                    created_at TEXT NOT NULL,
+                    indexed_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    document_id INTEGER NOT NULL,
+                    chunk_index INTEGER NOT NULL,
+                    content TEXT NOT NULL,
+                    embedding_json TEXT NOT NULL DEFAULT '{}',
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (document_id) REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+                    UNIQUE(document_id, chunk_index)
+                );
+
+                CREATE TABLE IF NOT EXISTS creator_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL,
+                    title TEXT NOT NULL DEFAULT '',
+                    prompt TEXT NOT NULL DEFAULT '',
+                    output_path TEXT NOT NULL DEFAULT '',
+                    backend TEXT NOT NULL DEFAULT '',
+                    model TEXT NOT NULL DEFAULT '',
+                    seed INTEGER,
+                    metadata_json TEXT NOT NULL DEFAULT '{}',
+                    status TEXT NOT NULL DEFAULT 'created',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS user_preferences (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
 
@@ -110,6 +207,12 @@ class Database:
             self._ensure_column(connection, "memories", "category", "TEXT NOT NULL DEFAULT 'general'")
             self._ensure_column(connection, "memories", "created_at", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "memories", "updated_at", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(connection, "memories", "title", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(connection, "memories", "importance", "INTEGER NOT NULL DEFAULT 3")
+            self._ensure_column(connection, "memories", "confidence", "REAL NOT NULL DEFAULT 0.8")
+            self._ensure_column(connection, "memories", "last_used", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(connection, "memories", "source_conversation_id", "INTEGER")
+            self._ensure_column(connection, "memories", "tags_json", "TEXT NOT NULL DEFAULT '[]'")
             self._ensure_column(connection, "recommendation_history", "mode", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "recommendation_history", "suggestion", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "recommendation_history", "status", "TEXT NOT NULL DEFAULT 'suggested'")
@@ -125,6 +228,7 @@ class Database:
             connection.execute("UPDATE messages SET created_at = ? WHERE created_at = ''", (now,))
             connection.execute("UPDATE memories SET created_at = ? WHERE created_at = ''", (now,))
             connection.execute("UPDATE memories SET updated_at = ? WHERE updated_at = ''", (now,))
+            connection.execute("UPDATE memories SET last_used = updated_at WHERE last_used = ''")
             connection.execute(
                 "UPDATE recommendation_history SET created_at = ? WHERE created_at = ''", (now,)
             )
@@ -138,6 +242,14 @@ class Database:
                     ON messages(conversation_id, id);
                 CREATE INDEX IF NOT EXISTS idx_memories_updated
                     ON memories(updated_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_projects_activity
+                    ON projects(last_activity DESC);
+                CREATE INDEX IF NOT EXISTS idx_project_items_project
+                    ON project_items(project_id, status, updated_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_document
+                    ON knowledge_chunks(document_id, chunk_index);
+                CREATE INDEX IF NOT EXISTS idx_creator_items_created
+                    ON creator_items(created_at DESC);
                 CREATE INDEX IF NOT EXISTS idx_recommendations_created
                     ON recommendation_history(created_at DESC);
                 """
@@ -174,6 +286,21 @@ class Database:
                 "SELECT id, title, created_at, updated_at FROM conversations "
                 "ORDER BY updated_at DESC, id DESC LIMIT ?",
                 (max(1, limit),),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def search_conversations(self, query: str, limit: int = 100) -> list[dict[str, Any]]:
+        clean = " ".join(query.split()).strip()
+        if not clean:
+            return self.list_conversations(limit)
+        pattern = f"%{clean}%"
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT DISTINCT c.id, c.title, c.created_at, c.updated_at "
+                "FROM conversations c LEFT JOIN messages m ON m.conversation_id = c.id "
+                "WHERE c.title LIKE ? OR m.content LIKE ? "
+                "ORDER BY c.updated_at DESC, c.id DESC LIMIT ?",
+                (pattern, pattern, max(1, limit)),
             ).fetchall()
         return [dict(row) for row in rows]
 
@@ -247,6 +374,34 @@ class Database:
             messages.append(item)
         return messages
 
+    def last_message(self, conversation_id: int, role: str | None = None) -> dict[str, Any] | None:
+        parameters: list[Any] = [conversation_id]
+        where = "conversation_id = ?"
+        if role:
+            where += " AND role = ?"
+            parameters.append(role)
+        with self.connect() as connection:
+            row = connection.execute(
+                f"SELECT id, role, content, sources_json, attachments_json, created_at "
+                f"FROM messages WHERE {where} ORDER BY id DESC LIMIT 1",
+                parameters,
+            ).fetchone()
+        if row is None:
+            return None
+        item = dict(row)
+        for source, target in (("sources_json", "sources"), ("attachments_json", "attachments")):
+            try:
+                item[target] = json.loads(item.pop(source) or "[]")
+            except (json.JSONDecodeError, TypeError):
+                item.pop(source, None)
+                item[target] = []
+        return item
+
+    def delete_message(self, message_id: int) -> bool:
+        with self.transaction() as connection:
+            cursor = connection.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+            return cursor.rowcount > 0
+
     def setting_values(self) -> dict[str, str]:
         with self.connect() as connection:
             rows = connection.execute("SELECT key, value FROM settings").fetchall()
@@ -266,4 +421,62 @@ class Database:
             connection.execute(
                 "INSERT INTO tool_activity(timestamp, tool, success, metadata) VALUES (?, ?, ?, ?)",
                 (utc_now(), tool[:80], int(success), safe_metadata),
+            )
+
+    def recent_tool_activity(self, limit: int = 20) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT timestamp, tool, success, metadata FROM tool_activity "
+                "ORDER BY id DESC LIMIT ?",
+                (max(1, min(limit, 100)),),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def integrity_check(self) -> tuple[bool, str]:
+        try:
+            with self.connect() as connection:
+                row = connection.execute("PRAGMA quick_check").fetchone()
+            result = str(row[0] if row else "no result")
+            return result.lower() == "ok", result
+        except sqlite3.DatabaseError as exc:
+            return False, f"{type(exc).__name__}: {exc}"
+
+    def checkpoint(self) -> None:
+        with self._write_lock:
+            with self.connect() as connection:
+                connection.execute("PRAGMA wal_checkpoint(FULL)")
+
+    def backup_to(self, destination: str | Path) -> Path:
+        target = Path(destination)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with self._write_lock:
+            source = self.connect()
+            backup = sqlite3.connect(target)
+            try:
+                source.backup(backup)
+                backup.commit()
+            finally:
+                backup.close()
+                source.close()
+        return target
+
+    def get_conversation_summary(self, conversation_id: int) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT conversation_id, through_message_id, summary, updated_at "
+                "FROM conversation_summaries WHERE conversation_id = ?",
+                (conversation_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def set_conversation_summary(
+        self, conversation_id: int, through_message_id: int, summary: str
+    ) -> None:
+        with self.transaction() as connection:
+            connection.execute(
+                "INSERT INTO conversation_summaries(conversation_id, through_message_id, summary, updated_at) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT(conversation_id) DO UPDATE SET "
+                "through_message_id = excluded.through_message_id, summary = excluded.summary, "
+                "updated_at = excluded.updated_at",
+                (conversation_id, through_message_id, summary.strip(), utc_now()),
             )

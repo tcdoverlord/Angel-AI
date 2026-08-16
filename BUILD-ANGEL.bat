@@ -31,11 +31,24 @@ echo [Angel] Packaging Angel...
 ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean Angel.spec
 if errorlevel 1 exit /b 1
 
-if not exist "dist\Angel.exe" (
-    echo [Angel] Packaging completed without dist\Angel.exe.
+if not exist "dist\Angel\Angel.exe" (
+    echo [Angel] Packaging completed without dist\Angel\Angel.exe.
+    exit /b 1
+)
+
+if not exist "_internal" mkdir "_internal"
+xcopy /e /i /y "dist\Angel\_internal" "_internal" >nul
+if errorlevel 1 (
+    echo [Angel] Could not place the runtime support files in the project root.
+    exit /b 1
+)
+
+copy /y "dist\Angel\Angel.exe" "Angel.exe" >nul
+if errorlevel 1 (
+    echo [Angel] Could not place Angel.exe in the project root.
     exit /b 1
 )
 
 echo.
-echo [Angel] Build complete: %CD%\dist\Angel.exe
+echo [Angel] Build complete: %CD%\Angel.exe
 exit /b 0

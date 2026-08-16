@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -29,6 +30,7 @@ class BrainResponse:
     sources: list[dict[str, str]] = field(default_factory=list)
     tool_calls: int = 0
     local_ai_available: bool = True
+    cancelled: bool = False
 
 
 class AngelBrain:
@@ -59,6 +61,8 @@ class AngelBrain:
         mode: str | None = None,
         status_callback: Callable[[str], None] | None = None,
         attachments: list[dict[str, object]] | None = None,
+        cancel_event: threading.Event | None = None,
+        record_user: bool = True,
     ) -> BrainResponse:
         if not self.database.conversation_exists(conversation_id):
             raise ValueError("Conversation does not exist")
@@ -83,16 +87,19 @@ class AngelBrain:
         if not display_text:
             display_text = "Uploaded file" if len(prepared_attachments) == 1 else "Uploaded files"
 
-        self.database.add_message(
-            conversation_id, "user", display_text, attachments=prepared_attachments
-        )
-        self._set_title_from_first_turn(conversation_id, display_text)
+        if record_user:
+            self.database.add_message(
+                conversation_id, "user", display_text, attachments=prepared_attachments
+            )
+            self._set_title_from_first_turn(conversation_id, display_text)
         current = self.settings.get()
         loop = ToolLoop(self.tools, self.maximum_tool_calls)
         sources: list[dict[str, str]] = []
         preflight_results: list[str] = []
 
-        planned = self._planned_tool(clean_user_text, mode, current.location)
+        planned = self._planned_tool(
+            clean_user_text, mode, current.location, current.connectivity_mode
+        )
         if planned is not None:
             self._status(status_callback, f"Using {planned.name.replace('_', ' ')}…")
             result = loop.execute(planned)
@@ -112,8 +119,12 @@ class AngelBrain:
         self._status(status_callback, "Thinking…")
 
         try:
+            if current.connectivity_mode == "Offline" and not self.ollama.is_local_url(current.ollama_url):
+                raise OllamaError("Offline mode requires a localhost Ollama URL")
             raw_response = self.ollama.chat(current.ollama_url, current.model, messages)
             while True:
+                if cancel_event is not None and cancel_event.is_set():
+                    return BrainResponse("", list(sources), loop.calls, True, True)
                 try:
                     request = parse_tool_request(raw_response)
                 except MalformedToolRequest:
@@ -121,7 +132,7 @@ class AngelBrain:
                         "I couldn't safely understand the tool request from the local model, so I did "
                         "not run anything. Please try phrasing that once more."
                     )
-                    return self._finish(conversation_id, final, sources, loop.calls, True, mode)
+                    return self._finish(conversation_id, final, sources, loop.calls, True, mode, cancel_event)
                 if request is None:
                     return self._finish(
                         conversation_id,
@@ -130,6 +141,7 @@ class AngelBrain:
                         loop.calls,
                         True,
                         mode,
+                        cancel_event,
                     )
                 self._status(status_callback, f"Using {request.name.replace('_', ' ')}…")
                 try:
@@ -139,13 +151,13 @@ class AngelBrain:
                         f"The local model requested a tool named '{request.name}', but Angel rejected it "
                         "because it is not allowlisted. Nothing unsafe was run."
                     )
-                    return self._finish(conversation_id, final, sources, loop.calls, True, mode)
+                    return self._finish(conversation_id, final, sources, loop.calls, True, mode, cancel_event)
                 except ToolLoopLimitError:
                     final = (
                         "I stopped because the safe tool-call limit was reached. I won't keep looping or "
                         "pretend the request completed."
                     )
-                    return self._finish(conversation_id, final, sources, loop.calls, True, mode)
+                    return self._finish(conversation_id, final, sources, loop.calls, True, mode, cancel_event)
                 self._merge_sources(sources, result)
                 messages = self.context.append_tool_exchange(messages, raw_response, result.content)
                 self._status(status_callback, "Thinking with the tool result…")
@@ -153,11 +165,11 @@ class AngelBrain:
         except OllamaError as exc:
             self.logger.info("Local AI unavailable during response: %s", exc)
             final = self._offline_fallback(preflight_results, sources)
-            return self._finish(conversation_id, final, sources, loop.calls, False, mode)
+            return self._finish(conversation_id, final, sources, loop.calls, False, mode, cancel_event)
         except Exception:
             self.logger.exception("Unexpected Angel brain failure")
             final = "Something went wrong while I was thinking. Your conversation is still saved locally."
-            return self._finish(conversation_id, final, sources, loop.calls, False, mode)
+            return self._finish(conversation_id, final, sources, loop.calls, False, mode, cancel_event)
 
     def _finish(
         self,
@@ -167,7 +179,10 @@ class AngelBrain:
         tool_calls: int,
         local_ai_available: bool,
         mode: str | None,
+        cancel_event: threading.Event | None = None,
     ) -> BrainResponse:
+        if cancel_event is not None and cancel_event.is_set():
+            return BrainResponse("", list(sources), tool_calls, local_ai_available, True)
         clean_content = content.strip() or "I don't have a usable response yet."
         self.database.add_message(conversation_id, "assistant", clean_content, sources)
         if mode and clean_content and local_ai_available:
@@ -176,7 +191,15 @@ class AngelBrain:
 
     @staticmethod
     def _clean_response(response: str) -> str:
-        return response.replace("ANGEL_FINAL_RESPONSE", "").strip()
+        clean = response.replace("ANGEL_FINAL_RESPONSE", "").strip()
+        clean = re.sub(
+            r"^(?:as (?:an? )?(?:llama|qwen|gemma|mistral|ollama|language) (?:ai |language )?model|"
+            r"i(?:'m| am) (?:an? )?(?:ollama|llama|qwen|gemma|mistral) (?:ai |language )?model)\s*[,.:—-]*\s*",
+            "",
+            clean,
+            flags=re.IGNORECASE,
+        )
+        return clean.strip()
 
     @staticmethod
     def _merge_sources(target: list[dict[str, str]], result: ToolResult) -> None:
@@ -193,7 +216,7 @@ class AngelBrain:
             self.database.rename_conversation(conversation_id, title or "New Conversation")
 
     def _planned_tool(
-        self, text: str, mode: str | None, location: str
+        self, text: str, mode: str | None, location: str, connectivity_mode: str
     ) -> ToolRequest | None:
         lowered = text.lower().strip()
         forget = re.search(r"\bforget\s+(?:memory\s*)?#?(\d+)\b", lowered)
@@ -220,18 +243,28 @@ class AngelBrain:
         ):
             return ToolRequest("current_datetime", {})
 
-        if not self.settings.get().internet_search_enabled:
+        if re.search(
+            r"\b(where did we leave off|continue (?:the )?(?:project|what we were building)|"
+            r"what remains unfinished|project status)\b",
+            lowered,
+        ) and "search_projects" in self.tools.names:
+            return ToolRequest("search_projects", {"query": text, "limit": 5})
+
+        if connectivity_mode == "Offline" or not self.settings.get().internet_search_enabled:
             return None
         if mode in {"Get Me Out", "Something Free"} and not location:
             return None
         if mode in {"Make Money", "Get Me Out", "Something Free"}:
             query = self._quick_action_search_query(mode, location)
             return ToolRequest("search_web", {"query": query, "limit": 5})
-        current_terms = re.search(
-            r"\b(search(?: the web)?|look up|latest|current|today|tonight|news|weather|nearby|"
-            r"open now|events?|hiring|job openings?|prices?)\b",
-            lowered,
-        )
+        explicit_search = re.search(r"\b(search(?: the web)?|look up|browse|find online)\b", lowered)
+        current_terms = explicit_search
+        if connectivity_mode == "Auto":
+            current_terms = re.search(
+                r"\b(search(?: the web)?|look up|latest|current|today|tonight|news|weather|nearby|"
+                r"open now|events?|hiring|job openings?|prices?)\b",
+                lowered,
+            )
         if current_terms:
             query = text
             if location and re.search(r"\b(nearby|local|near me|events?|hiring|open now)\b", lowered):
@@ -280,7 +313,7 @@ class AngelBrain:
                 return prefix + tool_results[-1] + "\n\nThe verified sources are listed below."
             return prefix + tool_results[-1]
         return (
-            "Local AI is offline right now. Your conversation is saved, and Memory and Settings remain "
+            "Angel Local AI is offline right now. Your conversation is saved, and Memory and Settings remain "
             "available. Start Ollama or use Settings → Recheck Connection, then try again."
         )
 
