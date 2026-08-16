@@ -27,3 +27,28 @@ knowledge/
 models/
 projects/
 creator/
+
+# Private configuration and credentials
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+credentials*
+secrets*
+tokens*
+api_keys*
+
+# Local AI weights and checkpoints
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Operating-system/editor leftovers
+.DS_Store
+Thumbs.db
+desktop.ini

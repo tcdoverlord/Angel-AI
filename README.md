@@ -1,226 +1,342 @@
-# ANGEL
+# Angel AI
 
-Angel is a local-first Windows AI companion. The normal launcher is:
+**A local-first, offline-capable personal AI assistant for Windows**
 
-```text
-D:\Angel_AI\Angel.exe
+Angel is a native Windows desktop application built around local language-model
+inference, durable personal context, and explicit separation between private user data
+and disposable application cache. Ollama provides the replaceable local language
+engine; Angel provides the identity, context assembly, memory, projects, knowledge,
+tools, backups, diagnostics, voice, and interface.
+
+The repository contains source code, tests, documentation, and a reproducible Windows
+build pipeline. It intentionally excludes private runtime data and generated binaries.
+
+## Engineering Highlights
+
+- Designed an offline-first desktop AI architecture around localhost Ollama inference.
+- Built persistent conversation, long-term memory, project, knowledge, settings, and
+  creator-metadata systems on SQLite.
+- Separated disposable cache from durable data and tested that cache clearing causes
+  zero loss of conversations, memories, projects, or settings.
+- Implemented rotating SQLite backups, validated restoration, integrity checks, and
+  corrupt-database preservation/recovery.
+- Added automatic Ollama installation, service, model, storage, and hardware discovery.
+- Designed capability routing for chat, coding, vision, embedding, image, and music
+  engines without making those engines Angel's identity.
+- Integrated replaceable localhost APIs for ComfyUI image generation and ACE-Step music
+  generation, with graceful degradation when either service is unavailable.
+- Built automated offline, persistence, migration, cache-survival, recovery, tool-safety,
+  attachment, speech, and UI regression tests.
+- Packaged the application as a native Windows executable with PyInstaller.
+
+## Overview
+
+Angel focuses on the less visible engineering needed to make a local assistant useful:
+continuity across sessions, bounded model context, honest capability reporting,
+recoverable storage, safe tool execution, optional-service isolation, and a practical
+desktop interface.
+
+The application can:
+
+- hold multiple searchable conversations;
+- deliberately remember important facts without treating every chat line as memory;
+- continue named projects with state, decisions, tasks, notes, and file references;
+- index local reference files in a private Knowledge Library;
+- use Windows-installed text-to-speech voices;
+- search the public web only when the selected connectivity mode permits it;
+- connect to optional local image and music services; and
+- remain usable when internet access or optional creator backends are unavailable.
+
+No cloud AI subscription or account is required for core local conversation after
+Ollama and a compatible model are installed.
+
+## Why I Built It
+
+The engineering goal was to build a personal AI system whose core operation and
+continuity stay under the user's control. A local model alone is not a complete
+assistant: the surrounding application must manage identity, context, durable state,
+safe tools, failure modes, resource usage, and recovery.
+
+Angel explores that complete application layer while keeping its language model and
+optional creator engines replaceable.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    UI["Angel Desktop UI"] --> Brain["Conversation and Tool Orchestrator"]
+    Brain --> Context["Context and Personality Engine"]
+    Context --> Memory["Memory / Projects / Knowledge"]
+    Memory --> SQLite[("SQLite Durable Store")]
+    Brain --> Tools["Allowlisted Local and Internet Tools"]
+    Brain --> Ollama["Ollama Local LLM"]
+    UI --> Router["Capability / Model Router"]
+    Router --> Ollama
+    Router --> ComfyUI["Optional ComfyUI Backend"]
+    Router --> ACEStep["Optional ACE-Step Backend"]
+    SQLite --> Backups["Rotating Verified Backups"]
 ```
 
-The window, personality, conversations, memory, projects, settings, knowledge library,
-creator library, backups, and diagnostics belong to Angel. Ollama is the replaceable
-local language engine behind the conversation.
+Angel's application layer owns its personality and behavior. Ollama, ComfyUI, and
+ACE-Step are specialized engines beneath that layer rather than separate user-facing
+identities.
 
-Angel has no account requirement, telemetry, analytics, or tracking. In **Offline**
-mode it only permits a localhost Ollama connection and does not run the public search
-tool.
+### Major components
 
-## Start here
+| Component | Responsibility |
+|---|---|
+| `angel/ui.py` | Native Tkinter interface and background-task coordination |
+| `angel/brain.py` | Conversation flow, tool loop, cancellation, and response persistence |
+| `angel/personality.py` | Identity, communication behavior, and truthfulness rules |
+| `angel/context.py` | Bounded assembly of recent chat, summaries, projects, memory, and knowledge |
+| `angel/database.py` | SQLite schema, migrations, transactions, integrity, and connection lifecycle |
+| `angel/backups.py` | Consistent snapshots, rotation, validation, restore, and corruption recovery |
+| `angel/memory.py` | Intentional memory, relevance scoring, consolidation, metadata, and deletion |
+| `angel/projects.py` | Durable project state, records, and active-project continuity |
+| `angel/knowledge.py` | Local ingestion, chunking, deduplication, indexing, and retrieval |
+| `angel/local_ai.py` | Ollama discovery/startup, installed models, hardware, and recommendations |
+| `angel/creator.py` | ComfyUI, ACE-Step, Creator Library, and capability routing |
+| `angel/tools.py` | Strict tool allowlist, validation, permission metadata, limits, and logging |
+| `angel/diagnostics.py` | Non-sensitive local health and capability reporting |
 
-1. Double-click `D:\Angel_AI\Angel.exe`.
-2. Type in the box at the bottom.
-3. Press **Enter** to send. Press **Shift+Enter** for a new line.
-4. Use **Upload Files** for any file type.
-5. Use **Read Last Reply** or enable automatic read-aloud to use installed Windows
-   voices.
+## Key Features
 
-Angel detects the usual Windows Ollama install locations and can start its local
-service. It never silently downloads a model. If no model is installed, open **Setup**
-for a clear status and hardware-aware recommendation. The current starter model is
-`llama3.2:3b`.
-
-## What is included
+### Chat and continuity
 
 - Persistent conversations with search, rename, and confirmed deletion.
-- Send with Enter, multiline with Shift+Enter, Stop Generating, Regenerate, Copy Reply,
-  and Reuse Prompt.
-- Arbitrary multi-file upload with honest local extraction for text, code, Markdown,
-  JSON, CSV, HTML, DOCX, XLSX, PDF, and basic media metadata when supported.
-- Windows built-in text-to-speech voices, automatic read-aloud, replay, stop, voice
-  choice, and speed control.
-- Deliberate long-term memory with categories, importance, confidence, edit, search,
-  consolidation, and deletion.
-- Persistent projects with current state, decisions, tasks, ideas, notes, files, and an
-  active-project context.
-- A private local Knowledge Library with copied source files, local chunking,
-  deduplication, deterministic local retrieval, source display, removal, and reindex.
-- Offline, Local + Internet Tools, and Auto connectivity modes.
-- Low Resource, Balanced, and Maximum Quality context profiles.
-- One More Thing, Make Money, Get Me Out, Build Something, Something Free, and
-  Surprise Me quick actions.
-- Local diagnostics for database health, paths, backups, cache, Ollama, installed
-  models, storage, hardware, creator backends, internet state, and recent errors.
-- A local Creator workspace and library for ComfyUI image generation and ACE-Step
-  music generation when those optional localhost services and models are installed.
-- Daily rotating database backups, manual backups, verified restore, corrupt-database
-  preservation/recovery, and safe cache clearing.
+- Enter to send and Shift+Enter for a new line.
+- Stop Generating, Regenerate, Copy Reply, and Reuse Prompt controls.
+- Selectable conversation text, Markdown-style fenced code rendering, clickable sources,
+  clickable local attachments, and attachment indicators.
+- Bounded recent history plus deterministic older-conversation summaries; original
+  messages remain stored.
 
-## The folders are intentionally separated
+### Memory, projects, and knowledge
+
+- Deliberate long-term memory with categories, importance, confidence, tags, source
+  conversation, last-used time, editing, search, consolidation, and deletion.
+- Project state with decisions, open tasks, completed work, ideas, notes, activities,
+  and file references.
+- Active and relevant projects automatically contribute bounded context.
+- Local Knowledge Library with durable source copies, incremental ingestion, duplicate
+  detection, bounded chunks, persistent metadata, local retrieval, reindex, and removal.
+- No hosted vector database and no required knowledge-service account.
+
+### Local AI and connectivity
+
+- Local Ollama inference with no hidden cloud fallback.
+- Automatic detection of common Windows Ollama locations and optional service startup.
+- Installed-model inventory, model sizes, storage location, real inference test, and
+  hardware-aware Lightweight/Balanced/Powerful guidance.
+- **Offline**, **Local + Internet Tools**, and **Auto** connectivity modes.
+- **Low Resource**, **Balanced**, and **Maximum Quality** context profiles.
+- Separate model-role settings for chat, coding, vision, embeddings, images, and music.
+
+### Files, speech, and tools
+
+- Arbitrary multi-file attachment support without an extension allowlist.
+- Local extraction where supported for text, Markdown, JSON, CSV, source code, HTML,
+  PDF, DOCX, and XLSX, plus basic common-media metadata.
+- Honest metadata-only handling for unsupported formats.
+- Installed Windows text-to-speech voices with automatic reading, replay, stop, voice
+  choice, and speed control.
+- Strictly allowlisted tools with permission levels, schemas, timeouts, error handling,
+  activity logging, and a bounded tool-call loop.
+
+### Optional creator integrations
+
+- ComfyUI text-to-image workflow with prompt, negative prompt, dimensions, steps,
+  checkpoint, seed, local output, and persistent generation metadata.
+- ACE-Step music workflow with title, description, genre, mood, lyrics,
+  vocal/instrumental mode, vocal style, duration, seed, WAV output, and playback.
+- Unified Creator Library metadata for images and songs.
+- Creator failures are isolated; chat, memory, projects, and other local features remain
+  available when creator services are absent.
+
+## Offline-First Design
+
+Offline mode enforces a localhost Ollama endpoint and blocks public search-tool use.
+Angel does not equate “offline” with “the UI opens”: the acceptance path exercises real
+local inference, then restarts the service composition and checks continuity.
+
+The verified offline acceptance run used an installed `llama3.2:3b` model and confirmed:
+
+- three local responses completed;
+- zero external search-provider calls occurred;
+- conversations, memory, project state, and settings survived restart;
+- disposable cache was removed and recreated; and
+- local conversation continued after restart.
+
+## Data Protection
+
+Angel deliberately separates durable information from rebuildable or disposable state:
 
 ```text
-D:\Angel_AI\
-├── Angel.exe              normal launcher
-├── _internal\             packaged runtime files required by Angel.exe
-├── data\                  NEVER treat as disposable
-│   ├── angel.db           chats, memory, projects, settings, indexes, metadata
-│   ├── generated\         generated images and music
-│   └── logs\              rotating diagnostic log
-├── backups\               rotating verified database backup ZIP files
-├── knowledge\             durable copies of Knowledge Library source files
-├── models\                Angel-managed model space (not Ollama's own store)
-├── projects\              durable project files reserved for project workflows
+<Angel installation>\
+├── data\                  durable database, logs, indexes, and generated media
+│   └── angel.db           conversations, memory, projects, settings, and metadata
+├── backups\               rotating validated database snapshots
+├── knowledge\             durable Knowledge Library source copies
+├── projects\              reserved durable project workspace
 ├── creator\               durable creator workspace
-└── cache\                 disposable; Angel recreates it if deleted
+├── models\                reserved Angel-managed model space
+└── cache\                 disposable and automatically recreated
 ```
 
-Deleting `cache` must not delete or reset conversations, memories, projects, settings,
-knowledge records, or creator records. Never use cleanup software against `data`,
-`backups`, `knowledge`, `projects`, or `creator`.
+Important safeguards include:
 
-The former `%LOCALAPPDATA%\Angel\angel.db` is copied into the new `data` folder once if
-the new database does not exist. It is never used to overwrite a newer database.
+- SQLite foreign keys, WAL mode, transactions, busy timeouts, and integrity checks;
+- atomic JSON configuration writes;
+- SQLite's online backup API instead of copying an actively changing database;
+- backup manifests and validation before restore;
+- a safety backup before replacing the current database;
+- preservation of a corrupt database before recovery; and
+- explicit regression tests proving cache deletion does not erase durable state.
 
-## Memory and projects
+The former LocalAppData database location is migrated once only when the new database
+does not already exist. It never overwrites a newer database.
 
-Conversation history and memory are separate. Angel only saves a chat detail as a
-long-term memory when you explicitly ask (for example, “Remember that…”) or add it in
-**Memory**. Memory categories cover people, preferences, dislikes, projects, goals,
-tasks, decisions, hardware, software, routines, creative work, ideas, and important
-facts.
+## Testing
 
-Projects keep durable state outside one chat. Open **Projects** to create a project,
-make it active, update where you left off, and add a decision, task, completed item,
-idea, note, file reference, or activity. Angel adds the active or relevant project to
-conversation context without stuffing the entire database into each prompt.
+The current verified baseline is:
 
-## Knowledge Library
-
-Open **Knowledge**, choose one or more files, and Angel copies them into the durable
-`knowledge` folder. Supported content is extracted locally, divided into bounded
-chunks, and indexed without a cloud account or hosted vector database. Unsupported
-formats remain available as honest metadata-only records.
-
-PDF text extraction uses `pypdf`. Image OCR, audio transcription, and video
-transcription are not bundled, so Angel does not pretend those operations happened.
-
-## Local AI and connectivity
-
-Open **Setup** to see CPU, RAM, GPU details when Windows reports them, disk space,
-Ollama location/state, installed models, model sizes, and Lightweight/Balanced/Powerful
-recommendations. You can start or explicitly restart localhost Ollama and run a real
-inference test.
-
-Connectivity modes:
-
-- **Offline** — local Ollama only; public search is blocked.
-- **Local + Internet Tools** — stays local unless you explicitly ask to search.
-- **Auto** — Angel may search when a request clearly needs current information.
-
-Search results are visibly labeled and contain clickable public sources. If searching
-fails, Angel says so instead of inventing current results.
-
-## Image generation
-
-Angel uses an optional local ComfyUI server, defaulting to
-`http://127.0.0.1:8188`. It detects the server and available checkpoints, submits a
-standard text-to-image workflow, waits for completion, downloads the result locally,
-and stores generation metadata in the Creator Library.
-
-If ComfyUI or a checkpoint is missing, Angel shows a setup/unavailable message and the
-rest of the app continues normally. Angel does not silently install ComfyUI or large
-image models.
-
-## Music generation
-
-Angel uses an optional local ACE-Step API server, defaulting to
-`http://127.0.0.1:8001`. The Creator screen supports prompt, lyrics, duration,
-instrumental mode, seed, model, generate/regenerate, WAV playback/stop, local save,
-and Creator Library metadata.
-
-If ACE-Step or its model is absent, Angel reports that honestly. It does not silently
-install or download the large music stack.
-
-## Backups and recovery
-
-Open **Backups** to create a backup, inspect backup status, restore a selected backup,
-open the backup folder, or clear only cache. Angel also makes a startup backup when the
-newest one is more than a day old and rotates old backups.
-
-A backup uses SQLite's consistent backup API, includes a manifest and settings
-snapshot, and is validated before it can restore. Restore creates a safety backup
-first. If startup finds a corrupt database, the bad file is preserved with an
-`angel.corrupt-...db` name and the newest valid backup is restored when available.
-
-Ollama model blobs and generated media files are deliberately not duplicated into each
-database backup. Their Angel metadata is backed up; source/generated files should also
-be included in normal disk backup if they matter to you.
-
-## Build from source
-
-Double-click `BUILD-ANGEL.bat`, or run it in a terminal. It creates `.venv`, installs
-the small Python/build dependencies, runs every automated test, stops on failure,
-packages a windowed executable, and places the launcher at both
-`dist\Angel\Angel.exe` and the project root `Angel.exe`. Keep the adjacent `_internal`
-runtime folder beside the executable.
-
-To run source directly, double-click `RUN-ANGEL.bat` or run:
-
-```powershell
-python angel.py
+```text
+60/60 automated tests passed
 ```
 
-For a real local acceptance check:
+Additional acceptance results performed on the packaged Windows application:
 
-```powershell
-python angel.py --data-dir .\data\acceptance --acceptance-test --live-model
-python angel.py --data-dir .\data\offline-acceptance --offline-acceptance
-```
+- packaged UI startup: passed;
+- live local-model inference: passed;
+- offline acceptance: passed;
+- database integrity: passed;
+- backup and restoration: passed;
+- cache-survival persistence: passed; and
+- Windows installed-voice detection: passed.
 
-The normal automated suite is fully offline and uses no live model or public internet:
+The normal pytest suite uses mocked external services and requires neither public
+internet access nor a running Ollama service:
 
 ```powershell
 python -m pytest -q tests
 ```
 
-## Developer map
+GitHub Actions runs the same suite on Windows for pushes and pull requests.
 
-```text
-angel.py                  entry point
-BUILD-ANGEL.bat           test + package pipeline
-Angel.spec                PyInstaller windowed build
-angel/app.py              composition and acceptance checks
-angel/ui.py               native Tkinter interface
-angel/brain.py            response/tool orchestration and cancellation
-angel/personality.py      identity, behavior, and truthfulness layers
-angel/context.py          bounded chat/memory/project/knowledge context
-angel/database.py         schema, migrations, SQLite safety, integrity
-angel/backups.py          backups, rotation, restore, corruption recovery
-angel/memory.py           durable intentional memory
-angel/projects.py         project continuity
-angel/knowledge.py        local file library, chunking, and retrieval
-angel/attachments.py      arbitrary upload preparation and extraction
-angel/local_ai.py         Ollama startup, status, hardware, recommendations
-angel/creator.py          ComfyUI, ACE-Step, creator library, model router
-angel/diagnostics.py      local health report
-angel/tools.py            strict allowlisted tools and permissions
-angel/search.py           normalized safe public search
-angel/speech.py           Windows installed voice support
-angel/paths.py            authoritative durable/disposable folder layout
-tests/                    regression and protection tests
+## Technology
+
+- Python 3 and the standard library
+- Tkinter native Windows desktop UI
+- SQLite
+- Ollama localhost HTTP API
+- ComfyUI localhost API integration
+- ACE-Step 1.5 localhost API integration
+- Windows SAPI voices through PowerShell
+- `pypdf` for local PDF text extraction
+- pytest
+- PyInstaller
+- Git and GitHub Actions
+
+## Engineering Challenges
+
+### Separating local inference from internet state
+
+Ollama runs on localhost and must continue operating when the external network is down.
+Connectivity policy is enforced at tool planning and execution boundaries rather than
+being inferred from one generic “online” indicator.
+
+### Protecting durable state from cleanup tools
+
+Cache, model caches, and build artifacts are common cleanup targets. Angel assigns
+durable and disposable responsibilities to separate directories and tests the boundary
+by deleting cache and reopening the database.
+
+### Maintaining useful context without loading everything
+
+Every turn receives layered, bounded context: personality and truth rules, user
+preferences, active/relevant projects, relevant long-term memory, relevant knowledge,
+older-conversation summaries, recent messages, and verified tool results.
+
+### Recovering safely on Windows
+
+Windows file locking exposed an important database lifecycle issue during restore
+testing. Connections now close deterministically, database backups use SQLite's backup
+API, and restore/recovery stages replacement files within the durable data volume.
+
+### Isolating optional AI services
+
+Image and music stacks can consume significant disk, RAM, and GPU resources. Angel
+detects and invokes them only when requested. Missing services produce actionable local
+status instead of breaking the main assistant.
+
+## Building and Running
+
+### Requirements
+
+- Windows 10 or Windows 11
+- Python 3 with Tk support
+- Ollama for local conversation
+- A locally installed Ollama model
+
+Angel never downloads a large model silently. A lightweight starting point is:
+
+```powershell
+ollama pull llama3.2:3b
 ```
 
-## Honest limitations
+### Run from source
 
-- Conversation quality is limited by the selected local Ollama model and available
-  hardware. A small model will not match a frontier cloud model on every task.
-- Stop Generating prevents a late result from being stored or shown, but the current
-  Ollama HTTP request may continue internally until it returns or times out.
-- ComfyUI and ACE-Step are real localhost integrations, but their separate servers and
-  model files must already be installed and running.
-- There is no automatic large model download, plugin marketplace, unrestricted shell,
-  arbitrary code execution, browser/computer control, purchasing, posting, emailing,
-  password access, cookie access, or hidden cloud fallback.
-- Knowledge retrieval is intentionally lightweight and local; it is not a hosted
+```powershell
+python -m pip install -r requirements.txt
+python angel.py
+```
+
+Alternatively, double-click `RUN-ANGEL.bat`.
+
+### Build the Windows application
+
+```powershell
+.\BUILD-ANGEL.bat
+```
+
+The build script creates or reuses `.venv`, installs declared dependencies, runs the
+complete test suite, stops if testing fails, and packages the application. The launcher
+is written to `Angel.exe`; its adjacent `_internal` folder is required at runtime.
+
+Generated executables and runtime packages are reproducible and intentionally excluded
+from Git history.
+
+## Privacy
+
+This public repository contains application source, tests, documentation, and build
+automation only. `.gitignore` and publication checks exclude:
+
+- conversations, memories, settings, and SQLite databases;
+- logs, cache, backups, and local Knowledge Library documents;
+- generated images, music, and other private media;
+- local model weights and creator checkpoints;
+- `.env` files, credentials, tokens, keys, and certificates; and
+- generated executables and packaged runtime files.
+
+Angel has no telemetry or analytics. Public web searches necessarily send their query
+to the configured public search provider; Offline mode blocks that tool.
+
+## Current Limitations
+
+- Response quality depends on the selected local model and available hardware.
+- ComfyUI and ACE-Step require separate local installations and model files; they are
+  not bundled or automatically downloaded.
+- ComfyUI image-to-image, image editing, and in-app image previews are not implemented.
+- OCR, audio transcription, and video understanding are not currently implemented.
+- The coding-role architecture exists, but unrestricted autonomous shell or coding
+  execution is intentionally not provided.
+- Stop Generating prevents a late result from being displayed or stored, but the active
+  Ollama HTTP request can continue internally until it returns or times out.
+- Knowledge retrieval is intentionally lightweight and local rather than a hosted
   enterprise vector database.
 
-For a deliberately simple explanation of the implementation, read
+For a deliberately simple tour of the implementation, see
 [`WHAT-I-BUILT-SIMPLE.md`](WHAT-I-BUILT-SIMPLE.md).
+
+No license file is currently included. Repository visibility does not by itself grant
+permission to reuse the code.
