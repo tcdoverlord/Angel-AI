@@ -338,5 +338,16 @@ to the configured public search provider; Offline mode blocks that tool.
 For a deliberately simple tour of the implementation, see
 [`WHAT-I-BUILT-SIMPLE.md`](WHAT-I-BUILT-SIMPLE.md).
 
-No license file is currently included. Repository visibility does not by itself grant
-permission to reuse the code.
+### License & Use
+
+**Angel AI © 2026 TCDOVERLORD. All rights reserved.**
+
+Angel AI is source-available for personal, educational, study, learning,
+experimentation, and portfolio/review purposes. Commercial sale, commercial
+redistribution, incorporation of substantial portions into a commercial product, paid
+derivative products, or larger-scale commercial deployment requires prior permission
+from TCDOVERLORD through the GitHub repository or profile.
+
+Users are responsible for how they configure, modify, deploy, and use the software.
+See [`LICENSE`](LICENSE) for the complete ownership, permitted-use, warranty, and
+liability terms.
