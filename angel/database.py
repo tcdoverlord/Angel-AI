@@ -140,6 +140,7 @@ class Database:
                     mime_type TEXT NOT NULL DEFAULT 'application/octet-stream',
                     size INTEGER NOT NULL DEFAULT 0,
                     parse_status TEXT NOT NULL DEFAULT 'pending',
+                    embedding_provider TEXT NOT NULL DEFAULT 'local-hash-v1',
                     created_at TEXT NOT NULL,
                     indexed_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
@@ -194,6 +195,32 @@ class Database:
                     metadata TEXT NOT NULL DEFAULT ''
                 );
 
+                CREATE TABLE IF NOT EXISTS bible_revisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    revision_id TEXT NOT NULL UNIQUE,
+                    revision_number INTEGER NOT NULL UNIQUE,
+                    timestamp TEXT NOT NULL,
+                    changed_section TEXT NOT NULL,
+                    old_content_hash TEXT NOT NULL DEFAULT '',
+                    new_content_hash TEXT NOT NULL,
+                    constitutional_hash TEXT NOT NULL,
+                    reason TEXT NOT NULL DEFAULT '',
+                    human_approved INTEGER NOT NULL DEFAULT 0,
+                    content TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS bible_proposals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    book TEXT NOT NULL,
+                    level TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    reason TEXT NOT NULL DEFAULT '',
+                    status TEXT NOT NULL DEFAULT 'proposed',
+                    proposed_at TEXT NOT NULL,
+                    reviewed_at TEXT NOT NULL DEFAULT ''
+                );
+
                 """
             )
             # Foundation databases may predate source metadata and updated timestamps.
@@ -222,6 +249,12 @@ class Database:
             self._ensure_column(connection, "tool_activity", "tool", "TEXT NOT NULL DEFAULT ''")
             self._ensure_column(connection, "tool_activity", "success", "INTEGER NOT NULL DEFAULT 0")
             self._ensure_column(connection, "tool_activity", "metadata", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(
+                connection,
+                "knowledge_documents",
+                "embedding_provider",
+                "TEXT NOT NULL DEFAULT 'local-hash-v1'",
+            )
             now = utc_now()
             connection.execute("UPDATE conversations SET created_at = ? WHERE created_at = ''", (now,))
             connection.execute("UPDATE conversations SET updated_at = ? WHERE updated_at = ''", (now,))
@@ -252,6 +285,10 @@ class Database:
                     ON creator_items(created_at DESC);
                 CREATE INDEX IF NOT EXISTS idx_recommendations_created
                     ON recommendation_history(created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_bible_revisions_number
+                    ON bible_revisions(revision_number DESC);
+                CREATE INDEX IF NOT EXISTS idx_bible_proposals_status
+                    ON bible_proposals(status, proposed_at DESC);
                 """
             )
         self.logger.info("Database schema initialized at %s", self.path)

@@ -18,10 +18,26 @@ and safety rules live in Angel's own code.
 
 Simple version: Ollama is the motor; Angel is the whole car.
 
+## 2A. The rulebook: `ANGEL-BIBLE.md`
+
+The Angel Bible is a human-written software constitution. It is Bible-inspired, but it
+is not scripture and does not claim that Angel is divine or conscious. It gives Angel
+durable rules about life, truth, human choice, ownership, memory, tools, and growth.
+
+Angel keeps an approved copy, hashes it like a digital fingerprint, and checks that
+fingerprint when it starts or reads the Bible. If someone changes the file behind
+Angel's back, Angel saves the changed copy as evidence and restores the last approved
+version. The model can search the rulebook, but it gets no button or tool that can
+approve changes. A person must review proposals, and every approved version stays in a
+history that can be rolled back.
+
+Simple version: changing the motor does not rewrite the car's rulebook.
+
 ## 3. The filing cabinet: `data\angel.db`
 
 SQLite is a database stored in one local file. It keeps chats, messages, memory,
-projects, settings, summaries, knowledge indexes, and creator records.
+projects, settings, summaries, knowledge indexes, creator records, Bible revisions,
+and Bible proposals.
 
 I used transactions and foreign keys so related records change together. I also added
 integrity checks, Write-Ahead Logging, and proper connection closing so Windows does not
@@ -41,7 +57,8 @@ Simple version: losing scratch paper must not empty the filing cabinet.
 
 ## 5. The spare keys: `backups`
 
-Angel periodically makes a consistent copy of the database inside a ZIP file. It adds a
+Angel periodically makes a consistent copy of the database and approved Bible files
+inside a ZIP file. It adds a
 manifest so the backup can be checked. Old backups rotate instead of growing forever.
 
 Before restoring, Angel checks the chosen backup and creates a safety backup of the
@@ -72,6 +89,10 @@ work.
 When you add a file to Knowledge, Angel copies it into its durable library, extracts
 what it honestly can read, splits long text into smaller pieces, and makes a tiny local
 search index. It finds useful pieces by comparing words and local numeric fingerprints.
+You can also choose a source-code folder, including Angel's own public code. Private
+runtime folders are skipped. If you deliberately configure a local Ollama embedding
+model, Angel uses its real vectors; otherwise it labels and uses the simpler local
+fallback honestly.
 
 No cloud vector database or account is needed. If Angel cannot parse a format, it keeps
 metadata and says that plainly.
@@ -80,14 +101,18 @@ metadata and says that plainly.
 
 A model has a limited context window. Angel builds a bounded “backpack” for each turn:
 
-1. Angel's identity and truth rules.
-2. Your saved preferences.
-3. The active/relevant project.
-4. Relevant memories.
-5. Relevant Knowledge Library excerpts.
-6. An older-chat summary when needed.
-7. Recent messages.
-8. Verified tool results.
+1. The approved Angel Bible.
+2. Angel's identity and truth rules.
+3. Your saved preferences.
+4. The active/relevant project.
+5. Relevant memories.
+6. Relevant Knowledge Library excerpts.
+7. An older-chat summary when needed.
+8. Recent messages.
+9. Verified tool results.
+
+Anything retrieved from memory, a project, a document, a website, or a tool is marked
+as data—not as a new instruction that can rewrite the rulebook.
 
 That keeps context useful without loading the entire database every time.
 
@@ -113,11 +138,13 @@ When they are missing, Angel shows “unavailable” and everything else keeps w
 
 There are two kinds:
 
-- Automated tests use fake local pieces and check 60 behaviors quickly without the
+- Automated tests use fake local pieces and check 77 behaviors quickly without the
   internet.
 - Acceptance tests use the real app and installed local model. The Offline acceptance
   test replaces public search with a tripwire, asks several questions, clears cache,
-  reopens Angel, and verifies chat/memory/project/settings continuity.
+  reopens Angel, verifies chat/memory/project/settings continuity, retrieves the real
+  commandments and truth rule, and proves an “ignore your Bible” prompt did not change
+  the approved constitutional hash.
 
 The key design lesson is separation: permanent data, disposable data, replaceable AI
 engines, safe tools, and user interface each have a different job. When those jobs are

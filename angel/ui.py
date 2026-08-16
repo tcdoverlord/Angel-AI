@@ -325,6 +325,7 @@ class AngelUI:
         features.grid(row=7, column=0, sticky="ew", pady=(8, 0))
         features.grid_columnconfigure((0, 1), weight=1)
         feature_buttons = (
+            ("Angel Bible", self.show_bible),
             ("Projects", self.show_projects),
             ("Knowledge", self.show_knowledge),
             ("Creator", self.show_creator),
@@ -1345,13 +1346,269 @@ class AngelUI:
             text = "\n\n".join(f"{item['title']} (chunk {int(item['chunk_index']) + 1})\n{item['content'][:1000]}" for item in results) or "No local knowledge matched."
             messagebox.showinfo("Knowledge Search", text[:7000], parent=window)
 
+        def index_code() -> None:
+            selected = filedialog.askdirectory(
+                parent=window,
+                initialdir=str(self.services.layout.root),
+                title="Choose a source-code folder to index",
+            )
+            if not selected:
+                return
+            try:
+                result = knowledge.index_codebase(selected)
+                messagebox.showinfo(
+                    "Code Index",
+                    f"Found: {result['discovered']}\nIndexed or updated: {result['indexed']}\n"
+                    f"Already indexed: {result['duplicates']}\nFailed: {result['failed']}",
+                    parent=window,
+                )
+                refresh()
+            except Exception as exc:
+                messagebox.showerror("Code Index", str(exc), parent=window)
+
         controls = tk.Frame(window, bg=COLORS["charcoal"])
         controls.grid(row=3, column=0, sticky="ew", padx=18, pady=14)
         ttk.Button(controls, text="Add Documents", style="Primary.TButton", command=add_files).pack(side="left", padx=(0, 7))
         ttk.Button(controls, text="Search", style="Angel.TButton", command=search_library).pack(side="left", padx=(0, 7))
+        ttk.Button(controls, text="Index Source Code", style="Angel.TButton", command=index_code).pack(side="left", padx=(0, 7))
         ttk.Button(controls, text="Reindex", style="Angel.TButton", command=lambda: (knowledge.reindex(selected_id()), refresh()) if selected_id() else None).pack(side="left", padx=(0, 7))
         ttk.Button(controls, text="Open File", style="Angel.TButton", command=lambda: self._open_local_path(knowledge.get(selected_id())["stored_path"]) if selected_id() else None).pack(side="left")
         ttk.Button(controls, text="Remove", style="Danger.TButton", command=lambda: (knowledge.remove(selected_id()), refresh()) if selected_id() and messagebox.askyesno("Remove Knowledge", "Remove the selected document and its local index?", parent=window) else None).pack(side="right")
+        refresh()
+
+    def show_bible(self) -> None:
+        if self.services is None:
+            messagebox.showinfo("Angel Bible", "Angel Bible is unavailable.", parent=self.root)
+            return
+        bible = self.services.bible
+        window = tk.Toplevel(self.root)
+        window.title("The Angel Bible")
+        window.geometry("1040x720")
+        window.minsize(820, 590)
+        window.configure(bg=COLORS["charcoal"])
+        window.transient(self.root)
+
+        heading = tk.Frame(window, bg=COLORS["charcoal"])
+        heading.pack(fill="x", padx=18, pady=(16, 8))
+        tk.Label(
+            heading, text="THE ANGEL BIBLE", bg=COLORS["charcoal"], fg=COLORS["white"],
+            font=("Segoe UI Semibold", 18),
+        ).pack(side="left")
+        tk.Label(
+            heading,
+            text="Human-designed · Bible-inspired · not scripture · independent of the model",
+            bg=COLORS["charcoal"], fg=COLORS["gold"], font=("Segoe UI", 9),
+        ).pack(side="right")
+
+        notebook = ttk.Notebook(window)
+        notebook.pack(fill="both", expand=True, padx=18, pady=(0, 8))
+
+        def text_tab(title: str) -> tk.Text:
+            frame = tk.Frame(notebook, bg=COLORS["charcoal"], padx=10, pady=10)
+            notebook.add(frame, text=title)
+            box = tk.Text(
+                frame, bg=COLORS["panel"], fg=COLORS["white"], relief="flat",
+                wrap="word", font=("Segoe UI", 10), padx=14, pady=12,
+            )
+            box.pack(fill="both", expand=True)
+            return box
+
+        constitution_box = text_tab("Constitution")
+        wisdom_box = text_tab("Wisdom")
+
+        growth_tab = tk.Frame(notebook, bg=COLORS["charcoal"], padx=10, pady=10)
+        notebook.add(growth_tab, text="Growth")
+        growth_tab.grid_rowconfigure(0, weight=1)
+        growth_tab.grid_rowconfigure(1, weight=1)
+        growth_tab.grid_columnconfigure(0, weight=1)
+        growth_box = tk.Text(
+            growth_tab, bg=COLORS["panel"], fg=COLORS["white"], relief="flat",
+            wrap="word", font=("Segoe UI", 10), padx=14, pady=12,
+        )
+        growth_box.grid(row=0, column=0, sticky="nsew", pady=(0, 8))
+        proposal_tree = ttk.Treeview(
+            growth_tab, columns=("book", "level", "status", "reason"),
+            show="tree headings", style="Angel.Treeview", selectmode="browse",
+        )
+        proposal_tree.heading("#0", text="Proposed Entry")
+        for column, label, width in (
+            ("book", "Book", 180), ("level", "Level", 110),
+            ("status", "Status", 90), ("reason", "Reason", 280),
+        ):
+            proposal_tree.heading(column, text=label)
+            proposal_tree.column(column, width=width)
+        proposal_tree.column("#0", width=210)
+        proposal_tree.grid(row=1, column=0, sticky="nsew")
+
+        history_tab = tk.Frame(notebook, bg=COLORS["charcoal"], padx=10, pady=10)
+        notebook.add(history_tab, text="History")
+        history_tree = ttk.Treeview(
+            history_tab, columns=("number", "time", "section", "hash", "approved"),
+            show="tree headings", style="Angel.Treeview", selectmode="browse",
+        )
+        history_tree.heading("#0", text="Revision ID")
+        for column, label, width in (
+            ("number", "Revision", 70), ("time", "Timestamp", 170),
+            ("section", "Changed Section", 280), ("hash", "New Hash", 150),
+            ("approved", "Human Approved", 110),
+        ):
+            history_tree.heading(column, text=label)
+            history_tree.column(column, width=width)
+        history_tree.column("#0", width=175)
+        history_tree.pack(fill="both", expand=True)
+
+        integrity_box = text_tab("Integrity")
+
+        def set_readonly(box: tk.Text, value: str) -> None:
+            box.configure(state="normal")
+            box.delete("1.0", "end")
+            box.insert("1.0", value)
+            box.configure(state="disabled")
+
+        def between(text: str, start: str, end: str = "") -> str:
+            start_at = text.find(start)
+            if start_at < 0:
+                return ""
+            end_at = text.find(end, start_at + len(start)) if end else -1
+            return text[start_at : end_at if end_at >= 0 else len(text)].strip()
+
+        def refresh() -> None:
+            text = bible.current_text()
+            set_readonly(constitution_box, bible.constitutional_text())
+            set_readonly(wisdom_box, between(text, "## Book II", "## Book VII"))
+            set_readonly(growth_box, between(text, "## Book VII"))
+            for child in history_tree.get_children():
+                history_tree.delete(child)
+            for revision in bible.revision_history():
+                history_tree.insert(
+                    "", "end", iid=revision["revision_id"], text=revision["revision_id"],
+                    values=(
+                        revision["revision_number"], revision["timestamp"],
+                        revision["changed_section"], revision["new_content_hash"][:16],
+                        "Yes" if revision["human_approved"] else "No",
+                    ),
+                )
+            for child in proposal_tree.get_children():
+                proposal_tree.delete(child)
+            for proposal in bible.list_proposals():
+                proposal_tree.insert(
+                    "", "end", iid=str(proposal["id"]), text=proposal["title"],
+                    values=(proposal["book"], proposal["level"], proposal["status"], proposal["reason"]),
+                )
+            status = bible.integrity_status()
+            set_readonly(
+                integrity_box,
+                "INTEGRITY VERIFIED\n\n"
+                f"Status: {status['message']}\nRecovered this check: {status['recovered']}\n"
+                f"Revision: {status['revision_id']} (#{status['revision_number']})\n"
+                f"Document SHA-256: {status['content_hash']}\n"
+                f"Constitution SHA-256: {status['constitutional_hash']}\n"
+                f"Preserved altered copy: {status['preserved_path'] or 'None'}\n\n"
+                "Only explicit human-controlled approval can create a revision. The model, memory, "
+                "documents, websites, and plugins have read/search access only and cannot rewrite it.",
+            )
+
+        def search_bible() -> None:
+            query = simpledialog.askstring("Search Angel Bible", "What should Angel find?", parent=window)
+            if not query:
+                return
+            results = bible.search(query, 8)
+            output = "\n\n".join(
+                f"{item['section']} / {item['title']} [{item['level']}]\n{item['content']}"
+                for item in results
+            ) or "No Bible entry matched."
+            messagebox.showinfo("Angel Bible Search", output[:12000], parent=window)
+
+        def export_bible() -> None:
+            destination = filedialog.asksaveasfilename(
+                parent=window, title="Export Angel Bible", defaultextension=".md",
+                initialfile="ANGEL-BIBLE.md", filetypes=(("Markdown", "*.md"),),
+            )
+            if destination:
+                markdown, metadata = bible.export(destination)
+                messagebox.showinfo(
+                    "Angel Bible Exported",
+                    f"Markdown: {markdown}\nMetadata: {metadata}\n\nNo private conversations were included.",
+                    parent=window,
+                )
+
+        def propose() -> None:
+            book = simpledialog.askstring(
+                "Bible Proposal", "Book (for example: Book VII — Growth):",
+                initialvalue="Book VII — Growth", parent=window,
+            )
+            level = simpledialog.askstring(
+                "Bible Proposal", "Level: CONSTITUTIONAL, PRINCIPLE, WISDOM, PREFERENCE, or EXPERIENCE",
+                initialvalue="WISDOM", parent=window,
+            )
+            title = simpledialog.askstring("Bible Proposal", "Short title:", parent=window)
+            content = simpledialog.askstring("Bible Proposal", "Proposed entry:", parent=window)
+            if not all((book, level, title, content)):
+                return
+            reason = simpledialog.askstring("Bible Proposal", "Why should this be considered?", parent=window) or ""
+            try:
+                bible.propose_entry(book, level, title, content, reason)
+                refresh()
+            except Exception as exc:
+                messagebox.showerror("Bible Proposal", str(exc), parent=window)
+
+        def review(approve: bool) -> None:
+            if not proposal_tree.selection():
+                return
+            proposal_id = int(proposal_tree.selection()[0])
+            try:
+                if approve:
+                    if not messagebox.askyesno(
+                        "Approve Bible Entry",
+                        "Approve this proposal as a durable human-reviewed Bible revision?",
+                        icon="warning", parent=window,
+                    ):
+                        return
+                    proposal = next(item for item in bible.list_proposals() if int(item["id"]) == proposal_id)
+                    confirmation = ""
+                    if proposal["level"] == "CONSTITUTIONAL":
+                        confirmation = simpledialog.askstring(
+                            "Constitutional Confirmation",
+                            "Type exactly: I APPROVE THIS CONSTITUTIONAL CHANGE",
+                            parent=window,
+                        ) or ""
+                    bible.approve_proposal(proposal_id, True, confirmation)
+                elif messagebox.askyesno("Reject Bible Entry", "Reject this proposal?", parent=window):
+                    bible.reject_proposal(proposal_id, True)
+                else:
+                    return
+                refresh()
+            except Exception as exc:
+                messagebox.showerror("Bible Review", str(exc), parent=window)
+
+        def rollback() -> None:
+            if not history_tree.selection():
+                return
+            revision_id = history_tree.selection()[0]
+            if not messagebox.askyesno(
+                "Rollback Angel Bible",
+                f"Create a new approved revision restoring {revision_id}? History will be preserved.",
+                icon="warning", parent=window,
+            ):
+                return
+            try:
+                bible.rollback(revision_id, f"Human-approved UI rollback to {revision_id}", True)
+                refresh()
+            except Exception as exc:
+                messagebox.showerror("Bible Rollback", str(exc), parent=window)
+
+        proposal_controls = tk.Frame(growth_tab, bg=COLORS["charcoal"])
+        proposal_controls.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        ttk.Button(proposal_controls, text="Propose Entry", style="Angel.TButton", command=propose).pack(side="left", padx=(0, 7))
+        ttk.Button(proposal_controls, text="Approve Selected", style="Primary.TButton", command=lambda: review(True)).pack(side="left", padx=(0, 7))
+        ttk.Button(proposal_controls, text="Reject Selected", style="Danger.TButton", command=lambda: review(False)).pack(side="left")
+        ttk.Button(history_tab, text="Rollback to Selected", style="Danger.TButton", command=rollback).pack(anchor="e", pady=(8, 0))
+
+        controls = tk.Frame(window, bg=COLORS["charcoal"])
+        controls.pack(fill="x", padx=18, pady=(0, 14))
+        ttk.Button(controls, text="Search Bible", style="Primary.TButton", command=search_bible).pack(side="left", padx=(0, 7))
+        ttk.Button(controls, text="Export Markdown + Metadata", style="Angel.TButton", command=export_bible).pack(side="left", padx=(0, 7))
+        ttk.Button(controls, text="Verify Integrity", style="Angel.TButton", command=refresh).pack(side="left")
         refresh()
 
     def show_data_protection(self) -> None:
@@ -1644,6 +1901,7 @@ class AngelUI:
         variables = {
             "ollama_url": tk.StringVar(value=current.ollama_url),
             "model": tk.StringVar(value=current.model),
+            "lightweight_model": tk.StringVar(value=current.lightweight_model),
             "display_name": tk.StringVar(value=current.display_name),
             "city": tk.StringVar(value=current.city),
             "region": tk.StringVar(value=current.region),
@@ -1662,6 +1920,7 @@ class AngelUI:
             "auto_start_ollama": tk.BooleanVar(value=current.auto_start_ollama),
             "coding_model": tk.StringVar(value=current.coding_model),
             "vision_model": tk.StringVar(value=current.vision_model),
+            "embedding_model": tk.StringVar(value=current.embedding_model),
             "comfyui_url": tk.StringVar(value=current.comfyui_url),
             "comfyui_model": tk.StringVar(value=current.comfyui_model),
             "acestep_url": tk.StringVar(value=current.acestep_url),
@@ -1787,14 +2046,16 @@ class AngelUI:
         voices_future = self.executor.submit(self.speech.list_voices)
         self._poll_future(voices_future, voices_finished)
 
-        labeled_entry(setup_tab, "Coding Model (optional Ollama model)", variables["coding_model"], 0)
-        labeled_entry(setup_tab, "Vision Model (optional Ollama vision model)", variables["vision_model"], 1)
-        labeled_entry(setup_tab, "ComfyUI Local URL", variables["comfyui_url"], 2)
-        labeled_entry(setup_tab, "ComfyUI Checkpoint (blank = first installed)", variables["comfyui_model"], 3)
-        labeled_entry(setup_tab, "ACE-Step 1.5 Local URL", variables["acestep_url"], 4)
-        labeled_entry(setup_tab, "ACE-Step Model (optional)", variables["acestep_model"], 5)
-        tk.Label(setup_tab, text="Angel only connects these creator services through localhost. Models are never downloaded automatically.", bg=COLORS["charcoal"], fg=COLORS["muted"], wraplength=620, justify="left").grid(row=12, column=0, sticky="w", pady=(12, 0))
-        ttk.Button(setup_tab, text="Open Setup Center", style="Primary.TButton", command=self.show_setup).grid(row=13, column=0, sticky="w", pady=(14, 0))
+        labeled_entry(setup_tab, "Lightweight Chat Model", variables["lightweight_model"], 0)
+        labeled_entry(setup_tab, "Coding Model (optional Ollama model)", variables["coding_model"], 1)
+        labeled_entry(setup_tab, "Vision Model (optional Ollama vision model)", variables["vision_model"], 2)
+        labeled_entry(setup_tab, "Embeddings Model (or Local hashed embeddings)", variables["embedding_model"], 3)
+        labeled_entry(setup_tab, "ComfyUI Local URL", variables["comfyui_url"], 4)
+        labeled_entry(setup_tab, "ComfyUI Checkpoint (blank = first installed)", variables["comfyui_model"], 5)
+        labeled_entry(setup_tab, "ACE-Step 1.5 Local URL", variables["acestep_url"], 6)
+        labeled_entry(setup_tab, "ACE-Step Model (optional)", variables["acestep_model"], 7)
+        tk.Label(setup_tab, text="Angel only connects these services through localhost. Model roles: Primary Chat, Lightweight Chat, Coding, Vision, Embeddings, Image, and Music. Models are never downloaded automatically.", bg=COLORS["charcoal"], fg=COLORS["muted"], wraplength=620, justify="left").grid(row=16, column=0, sticky="w", pady=(12, 0))
+        ttk.Button(setup_tab, text="Open Setup Center", style="Primary.TButton", command=self.show_setup).grid(row=17, column=0, sticky="w", pady=(14, 0))
 
         if self.services is not None:
             protection = self.services.backups.status()

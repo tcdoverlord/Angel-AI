@@ -4,7 +4,7 @@ a = Analysis(
     ['angel.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('ANGEL-BIBLE.md', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

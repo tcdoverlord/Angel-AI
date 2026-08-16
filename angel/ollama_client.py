@@ -76,6 +76,31 @@ class OllamaClient:
             raise OllamaError("Ollama returned an empty or unsupported response")
         return content.strip()
 
+    def embed(self, base_url: str, model: str, inputs: str | list[str]) -> list[list[float]]:
+        """Create real embeddings with an explicitly configured local Ollama model."""
+        values = [inputs] if isinstance(inputs, str) else list(inputs)
+        if not model.strip() or not values:
+            raise OllamaError("A local embedding model and input are required")
+        payload = self._request(
+            base_url,
+            "/api/embed",
+            method="POST",
+            body={"model": model.strip(), "input": values},
+            timeout=self.timeout,
+        )
+        embeddings = payload.get("embeddings") if isinstance(payload, dict) else None
+        if not isinstance(embeddings, list) or len(embeddings) != len(values):
+            raise OllamaError("Ollama returned invalid embedding vectors")
+        checked: list[list[float]] = []
+        for vector in embeddings:
+            if not isinstance(vector, list) or not vector:
+                raise OllamaError("Ollama returned an empty embedding vector")
+            try:
+                checked.append([float(value) for value in vector])
+            except (TypeError, ValueError) as exc:
+                raise OllamaError("Ollama returned a malformed embedding vector") from exc
+        return checked
+
     def _request(
         self,
         base_url: str,

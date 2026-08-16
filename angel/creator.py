@@ -367,13 +367,26 @@ class ModelRouter:
 
     def statuses(self, chat_ready: bool, installed_chat_models: list[str]) -> list[CapabilityStatus]:
         current = self.settings.get()
+        image = self.images.status()
+        music = self.music.status()
         return [
-            CapabilityStatus("Chat AI", chat_ready, "Ollama", current.model, "Ready" if chat_ready else "Ollama/model unavailable"),
-            CapabilityStatus("Coding AI", bool(current.coding_model and current.coding_model in installed_chat_models), "Ollama", current.coding_model, "Uses chat model when no specialist is selected"),
-            CapabilityStatus("Vision AI", bool(current.vision_model and current.vision_model in installed_chat_models), "Ollama", current.vision_model, "Optional local vision model"),
-            CapabilityStatus("Embeddings", True, "Angel local hashed vectors", current.embedding_model, "Ready; no cloud database"),
-            self.images.status(),
-            self.music.status(),
+            CapabilityStatus("Primary Chat", chat_ready, "Ollama", current.model, "Ready" if chat_ready else "Ollama/model unavailable"),
+            CapabilityStatus(
+                "Lightweight Chat",
+                bool(current.lightweight_model and current.lightweight_model in installed_chat_models),
+                "Ollama", current.lightweight_model,
+                "Small fallback role; defaults to llama3.2:3b and never downloads automatically",
+            ),
+            CapabilityStatus("Coding", bool(current.coding_model and current.coding_model in installed_chat_models), "Ollama", current.coding_model, "Uses Primary Chat when no specialist is selected"),
+            CapabilityStatus("Vision", bool(current.vision_model and current.vision_model in installed_chat_models), "Ollama", current.vision_model, "Optional local vision model"),
+            CapabilityStatus(
+                "Embeddings", True,
+                "Ollama" if not current.embedding_model.lower().startswith("local hash") else "Angel deterministic local fallback",
+                current.embedding_model,
+                "Real local Ollama embeddings when configured; deterministic local retrieval vectors otherwise",
+            ),
+            CapabilityStatus("Image", image.installed, image.backend, image.model, image.message),
+            CapabilityStatus("Music", music.installed, music.backend, music.model, music.message),
         ]
 
 

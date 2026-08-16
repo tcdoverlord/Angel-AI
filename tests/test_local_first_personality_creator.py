@@ -116,7 +116,7 @@ def test_creator_backends_fail_gracefully_and_library_metadata_persists(tmp_path
     statuses = router.statuses(True, [settings.get().model])
     item = library.add("lyrics", "Local Song", "write lyrics", "", "Angel Chat", settings.get().model, 42, {"genre": "rock"})
 
-    assert next(status for status in statuses if status.role == "Image AI").installed is False
-    assert next(status for status in statuses if status.role == "Music AI").installed is False
+    assert next(status for status in statuses if status.role == "Image").installed is False
+    assert next(status for status in statuses if status.role == "Music").installed is False
     assert library.get(int(item["id"]))["metadata"]["genre"] == "rock"
     assert database.integrity_check()[0] is True

@@ -171,13 +171,13 @@ class LocalAIManager:
         match = re.search(r"(?<!\d)(\d+(?:\.\d+)?)b(?!\w)", lowered)
         billions = float(match.group(1)) if match else 0.0
         ram_gb = ram_bytes / (1024**3)
-        if billions and billions * 1.1 > ram_gb:
-            return "Not Recommended for This Hardware"
+        if billions and ram_gb and billions * 1.1 > ram_gb:
+            return "NOT RECOMMENDED"
         if billions <= 4 or any(word in lowered for word in ("mini", "small", "tiny")):
-            return "Lightweight"
+            return "SAFE"
         if billions <= 9:
-            return "Balanced"
-        return "Powerful"
+            return "RECOMMENDED"
+        return "HEAVY"
 
     def model_storage_path(self) -> Path:
         configured = os.environ.get("OLLAMA_MODELS", "").strip()

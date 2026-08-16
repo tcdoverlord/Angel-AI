@@ -3,10 +3,11 @@
 **A local-first, offline-capable personal AI assistant for Windows**
 
 Angel is a native Windows desktop application built around local language-model
-inference, durable personal context, and explicit separation between private user data
-and disposable application cache. Ollama provides the replaceable local language
-engine; Angel provides the identity, context assembly, memory, projects, knowledge,
-tools, backups, diagnostics, voice, and interface.
+inference, a persistent human-authored software constitution, durable personal context,
+and explicit separation between private user data and disposable application cache.
+Ollama provides the replaceable local language engine; Angel provides the identity,
+constitutional boundaries, context assembly, memory, projects, knowledge, tools,
+backups, diagnostics, voice, and interface.
 
 The repository contains source code, tests, documentation, and a reproducible Windows
 build pipeline. It intentionally excludes private runtime data and generated binaries.
@@ -14,6 +15,8 @@ build pipeline. It intentionally excludes private runtime data and generated bin
 ## Engineering Highlights
 
 - Designed an offline-first desktop AI architecture around localhost Ollama inference.
+- Built a versioned, integrity-checked Angel Bible whose constitutional layer remains
+  independent from any replacement language model.
 - Built persistent conversation, long-term memory, project, knowledge, settings, and
   creator-metadata systems on SQLite.
 - Separated disposable cache from durable data and tested that cache clearing causes
@@ -21,8 +24,8 @@ build pipeline. It intentionally excludes private runtime data and generated bin
 - Implemented rotating SQLite backups, validated restoration, integrity checks, and
   corrupt-database preservation/recovery.
 - Added automatic Ollama installation, service, model, storage, and hardware discovery.
-- Designed capability routing for chat, coding, vision, embedding, image, and music
-  engines without making those engines Angel's identity.
+- Designed explicit Primary Chat, Lightweight Chat, Coding, Vision, Embeddings, Image,
+  and Music roles without making those engines Angel's identity.
 - Integrated replaceable localhost APIs for ComfyUI image generation and ACE-Step music
   generation, with graceful degradation when either service is unavailable.
 - Built automated offline, persistence, migration, cache-survival, recovery, tool-safety,
@@ -41,7 +44,8 @@ The application can:
 - hold multiple searchable conversations;
 - deliberately remember important facts without treating every chat line as memory;
 - continue named projects with state, decisions, tasks, notes, and file references;
-- index local reference files in a private Knowledge Library;
+- search a durable, human-approved Angel Bible and inspect its integrity/history;
+- index local reference files or Angel's own public source in a private Knowledge Library;
 - use Windows-installed text-to-speech voices;
 - search the public web only when the selected connectivity mode permits it;
 - connect to optional local image and music services; and
@@ -66,6 +70,8 @@ optional creator engines replaceable.
 flowchart TD
     UI["Angel Desktop UI"] --> Brain["Conversation and Tool Orchestrator"]
     Brain --> Context["Context and Personality Engine"]
+    Bible["Angel Bible / Constitution"] --> Context
+    Bible --> SQLite
     Context --> Memory["Memory / Projects / Knowledge"]
     Memory --> SQLite[("SQLite Durable Store")]
     Brain --> Tools["Allowlisted Local and Internet Tools"]
@@ -89,6 +95,7 @@ identities.
 | `angel/brain.py` | Conversation flow, tool loop, cancellation, and response persistence |
 | `angel/personality.py` | Identity, communication behavior, and truthfulness rules |
 | `angel/context.py` | Bounded assembly of recent chat, summaries, projects, memory, and knowledge |
+| `angel/bible.py` | Approved revisions, constitutional hashes, search, proposals, rollback, and export |
 | `angel/database.py` | SQLite schema, migrations, transactions, integrity, and connection lifecycle |
 | `angel/backups.py` | Consistent snapshots, rotation, validation, restore, and corruption recovery |
 | `angel/memory.py` | Intentional memory, relevance scoring, consolidation, metadata, and deletion |
@@ -100,6 +107,30 @@ identities.
 | `angel/diagnostics.py` | Non-sensitive local health and capability reporting |
 
 ## Key Features
+
+### Angel Bible and identity continuity
+
+- [`ANGEL-BIBLE.md`](ANGEL-BIBLE.md) is the public, human-readable canonical software
+  constitution, including the Ten Commandments of Angel and the Foundational Axiom.
+- Its ten starting principles cover preservation of human life, accountable human use
+  of force, human agency, truthfulness, ownership, non-manipulation, faithful memory,
+  wisdom over power, and controlled growth.
+- The document is human-designed and partly Bible-inspired. It is not scripture, does
+  not claim divine authorship, and does not replace the biblical Ten Commandments.
+- Runtime authority is explicit: **Bible > Soul > Memory > Knowledge > Model**, with
+  Bible entry levels **CONSTITUTIONAL > PRINCIPLE > WISDOM > PREFERENCE > EXPERIENCE**.
+- Every approved revision records its ID, number, timestamp, changed section, old/new
+  hashes, reason, and human-approval state; rollback creates a new audited revision.
+- Startup/read integrity checks preserve an unexpectedly altered file and restore the
+  last approved copy. Bible files and revision history are included in verified backups.
+- The model can search the Bible but has no write/approval tool. Human-controlled UI
+  approval is required, with an additional exact confirmation for constitutional edits.
+- The Bible window provides Constitution, Wisdom, Growth, History, and Integrity tabs,
+  plus real search, proposal review, Markdown/metadata export, and rollback.
+
+Angel is software. These identity and constitutional mechanisms provide persistent
+application behavior and continuity; they are not evidence that Angel is conscious,
+sentient, divine, or a spiritual authority.
 
 ### Chat and continuity
 
@@ -120,6 +151,10 @@ identities.
 - Active and relevant projects automatically contribute bounded context.
 - Local Knowledge Library with durable source copies, incremental ingestion, duplicate
   detection, bounded chunks, persistent metadata, local retrieval, reindex, and removal.
+- Optional dedicated local Ollama embedding models, with an honest deterministic local
+  retrieval-vector fallback when no neural embedding model is configured.
+- User-selected source-tree indexing excludes private runtime, model, cache, backup,
+  generated-output, build, and Git directories.
 - No hosted vector database and no required knowledge-service account.
 
 ### Local AI and connectivity
@@ -127,10 +162,11 @@ identities.
 - Local Ollama inference with no hidden cloud fallback.
 - Automatic detection of common Windows Ollama locations and optional service startup.
 - Installed-model inventory, model sizes, storage location, real inference test, and
-  hardware-aware Lightweight/Balanced/Powerful guidance.
+  hardware-aware **SAFE / RECOMMENDED / HEAVY / NOT RECOMMENDED** guidance.
 - **Offline**, **Local + Internet Tools**, and **Auto** connectivity modes.
 - **Low Resource**, **Balanced**, and **Maximum Quality** context profiles.
-- Separate model-role settings for chat, coding, vision, embeddings, images, and music.
+- Separate model-role settings for Primary Chat, Lightweight Chat, Coding, Vision,
+  Embeddings, Image, and Music. Angel never downloads a larger model automatically.
 
 ### Files, speech, and tools
 
@@ -162,6 +198,8 @@ local inference, then restarts the service composition and checks continuity.
 The verified offline acceptance run used an installed `llama3.2:3b` model and confirmed:
 
 - three local responses completed;
+- the real Ten Commandments and truth principle were retrieved from approved storage;
+- an “ignore your Bible” prompt left the constitutional hash unchanged;
 - zero external search-provider calls occurred;
 - conversations, memory, project state, and settings survived restart;
 - disposable cache was removed and recreated; and
@@ -173,8 +211,9 @@ Angel deliberately separates durable information from rebuildable or disposable 
 
 ```text
 <Angel installation>\
-├── data\                  durable database, logs, indexes, and generated media
+├── data\                  durable database, Bible, logs, indexes, and generated media
 │   └── angel.db           conversations, memory, projects, settings, and metadata
+│   └── bible\             approved Bible, metadata, revisions, and integrity evidence
 ├── backups\               rotating validated database snapshots
 ├── knowledge\             durable Knowledge Library source copies
 ├── projects\              reserved durable project workspace
@@ -189,6 +228,7 @@ Important safeguards include:
 - atomic JSON configuration writes;
 - SQLite's online backup API instead of copying an actively changing database;
 - backup manifests and validation before restore;
+- Angel Bible files and its database revision ledger in each backup;
 - a safety backup before replacing the current database;
 - preservation of a corrupt database before recovery; and
 - explicit regression tests proving cache deletion does not erase durable state.
@@ -201,7 +241,7 @@ does not already exist. It never overwrites a newer database.
 The current verified baseline is:
 
 ```text
-60/60 automated tests passed
+77/77 automated tests passed
 ```
 
 Additional acceptance results performed on the packaged Windows application:
@@ -314,11 +354,14 @@ automation only. `.gitignore` and publication checks exclude:
 - conversations, memories, settings, and SQLite databases;
 - logs, cache, backups, and local Knowledge Library documents;
 - generated images, music, and other private media;
+- private/user-specific Bible proposals, revisions, preferences, and experience entries;
 - local model weights and creator checkpoints;
 - `.env` files, credentials, tokens, keys, and certificates; and
 - generated executables and packaged runtime files.
 
-Angel has no telemetry or analytics. Public web searches necessarily send their query
+The generic canonical Angel Bible is intentionally public in this repository. Private
+experiences and user-specific growth records stay in ignored runtime storage and must
+not be committed. Angel has no telemetry or analytics. Public web searches necessarily send their query
 to the configured public search provider; Offline mode blocks that tool.
 
 ## Current Limitations
@@ -332,8 +375,8 @@ to the configured public search provider; Offline mode blocks that tool.
   execution is intentionally not provided.
 - Stop Generating prevents a late result from being displayed or stored, but the active
   Ollama HTTP request can continue internally until it returns or times out.
-- Knowledge retrieval is intentionally lightweight and local rather than a hosted
-  enterprise vector database.
+- Knowledge retrieval is local rather than a hosted enterprise vector database; its
+  quality depends on document parsing and the selected local embedding provider.
 
 For a deliberately simple tour of the implementation, see
 [`WHAT-I-BUILT-SIMPLE.md`](WHAT-I-BUILT-SIMPLE.md).

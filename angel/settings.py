@@ -8,6 +8,7 @@ from .database import Database
 DEFAULT_SETTINGS: dict[str, str] = {
     "ollama_url": "http://127.0.0.1:11434",
     "model": "llama3.2:3b",
+    "lightweight_model": "llama3.2:3b",
     "display_name": "",
     "city": "",
     "region": "",
@@ -40,6 +41,7 @@ DEFAULT_SETTINGS: dict[str, str] = {
 class AngelSettings:
     ollama_url: str
     model: str
+    lightweight_model: str
     display_name: str
     city: str
     region: str
@@ -93,6 +95,7 @@ class SettingsService:
         return AngelSettings(
             ollama_url=self._safe_ollama_url(values["ollama_url"]),
             model=values["model"].strip() or DEFAULT_SETTINGS["model"],
+            lightweight_model=values["lightweight_model"].strip() or DEFAULT_SETTINGS["lightweight_model"],
             display_name=values["display_name"].strip(),
             city=values["city"].strip(),
             region=values["region"].strip(),

@@ -117,6 +117,7 @@ class BackupService:
                     "settings",
                     "knowledge metadata/index",
                     "creator metadata",
+                    "Angel Bible and approved revision history",
                 ],
                 "excludes": ["AI models", "cache", "generated media files"],
             }
@@ -126,6 +127,10 @@ class BackupService:
                 for config in sorted(self.layout.settings.glob("*.json")):
                     if config.is_file():
                         archive.write(config, f"data/settings/{config.name}")
+                for bible_file in sorted(self.layout.bible.rglob("*")):
+                    if bible_file.is_file():
+                        relative = bible_file.relative_to(self.layout.bible).as_posix()
+                        archive.write(bible_file, f"data/bible/{relative}")
             info = self._info(destination)
             self._rotate()
             return info
@@ -163,12 +168,16 @@ class BackupService:
             with zipfile.ZipFile(selected) as archive:
                 with archive.open("data/angel.db") as source, staging.open("wb") as target:
                     shutil.copyfileobj(source, target)
+                bible_members = self._validated_bible_members(archive)
             valid, detail = sqlite_quick_check(staging)
             if not valid:
                 raise DatabaseRecoveryError(f"Selected backup database is invalid: {detail}")
             self.database.checkpoint()
             _remove_sqlite_sidecars(self.layout.database)
             os.replace(staging, self.layout.database)
+            if bible_members:
+                with zipfile.ZipFile(selected) as archive:
+                    self._restore_bible_members(archive, bible_members)
             return safety
         except (KeyError, zipfile.BadZipFile) as exc:
             raise DatabaseRecoveryError("Selected file is not a valid Angel backup") from exc
@@ -204,6 +213,30 @@ class BackupService:
         )
         for old in paths[self.keep :]:
             old.unlink(missing_ok=True)
+
+    @staticmethod
+    def _validated_bible_members(archive: zipfile.ZipFile) -> list[str]:
+        members: list[str] = []
+        for name in archive.namelist():
+            if not name.startswith("data/bible/") or name.endswith("/"):
+                continue
+            relative = Path(name.removeprefix("data/bible/"))
+            if relative.is_absolute() or ".." in relative.parts:
+                raise DatabaseRecoveryError("Backup contains an unsafe Angel Bible path")
+            members.append(name)
+        return members
+
+    def _restore_bible_members(self, archive: zipfile.ZipFile, members: list[str]) -> None:
+        root = self.layout.bible.resolve()
+        root.mkdir(parents=True, exist_ok=True)
+        for name in members:
+            relative = Path(name.removeprefix("data/bible/"))
+            destination = (root / relative).resolve()
+            if root not in destination.parents:
+                raise DatabaseRecoveryError("Backup Angel Bible path escaped its data directory")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(name) as source, destination.open("wb") as target:
+                shutil.copyfileobj(source, target)
 
     @staticmethod
     def _info(path: Path) -> BackupInfo:

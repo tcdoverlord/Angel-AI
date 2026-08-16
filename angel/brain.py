@@ -105,6 +105,12 @@ class AngelBrain:
             result = loop.execute(planned)
             preflight_results.append(result.content)
             self._merge_sources(sources, result)
+            if planned.name == "search_bible" and result.success:
+                # Constitutional answers come directly from approved storage. A replaceable
+                # model is not allowed to paraphrase them into a different rule or instruction.
+                return self._finish(
+                    conversation_id, result.content, sources, loop.calls, True, mode, cancel_event
+                )
 
         messages = self.context.build(
             conversation_id,
@@ -219,6 +225,12 @@ class AngelBrain:
         self, text: str, mode: str | None, location: str, connectivity_mode: str
     ) -> ToolRequest | None:
         lowered = text.lower().strip()
+        if "search_bible" in self.tools.names and re.search(
+            r"\b(angel bible|your bible|ten commandments?|your commandments?|"
+            r"foundational axiom|capability is not authority|actually believe is true)\b",
+            lowered,
+        ):
+            return ToolRequest("search_bible", {"query": text, "limit": 6})
         forget = re.search(r"\bforget\s+(?:memory\s*)?#?(\d+)\b", lowered)
         if forget:
             return ToolRequest("forget_memory", {"memory_id": int(forget.group(1))})

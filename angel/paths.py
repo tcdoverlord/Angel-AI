@@ -25,6 +25,7 @@ class InstallationLayout:
     logs: Path
     settings: Path
     indexes: Path
+    bible: Path
 
     @property
     def database(self) -> Path:
@@ -61,6 +62,7 @@ def installation_layout(data_override: str | Path | None = None) -> Installation
         logs=data / "logs",
         settings=data / "settings",
         indexes=data / "indexes",
+        bible=data / "bible",
     )
     ensure_layout(layout)
     if data_override is None:
@@ -87,6 +89,7 @@ def ensure_layout(layout: InstallationLayout) -> None:
         layout.logs,
         layout.settings,
         layout.indexes,
+        layout.bible,
     )
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
