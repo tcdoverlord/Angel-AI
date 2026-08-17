@@ -1,5 +1,53 @@
 # Angel AI
 
+![Angel AI Hero](videos/Angel_AI_Hero_Readme.gif)
+
+<p align="center">
+
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?style=for-the-badge&logo=windows" alt="Windows 10 and 11" />
+
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3" />
+
+  <img src="https://img.shields.io/badge/AI-Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama" />
+
+  <img src="https://img.shields.io/badge/Model-Llama%203.2%203B-7C3AED?style=for-the-badge" alt="Llama 3.2 3B" />
+
+  <img src="https://img.shields.io/badge/Database-SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+
+  <img src="https://img.shields.io/badge/UI-Tkinter-2C3E50?style=for-the-badge&logo=python&logoColor=white" alt="Tkinter UI" />
+
+  <img src="https://img.shields.io/badge/Architecture-Local--First-2EA44F?style=for-the-badge" alt="Local First Architecture" />
+
+  <img src="https://img.shields.io/badge/Inference-On--Device-00A67E?style=for-the-badge" alt="On Device Inference" />
+
+  <img src="https://img.shields.io/badge/Privacy-Local%20Data-1F8B4C?style=for-the-badge&logo=shield&logoColor=white" alt="Local Data Privacy" />
+
+  <img src="https://img.shields.io/badge/Storage-Persistent%20Chats-F28C28?style=for-the-badge" alt="Persistent Conversations" />
+
+  <img src="https://img.shields.io/badge/Files-Multi--File%20Upload-00AEEF?style=for-the-badge" alt="Multi File Upload" />
+
+  <img src="https://img.shields.io/badge/Interface-Desktop%20App-6C63FF?style=for-the-badge" alt="Desktop Application" />
+
+  <img src="https://img.shields.io/badge/Testing-Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest" />
+
+  <img src="https://img.shields.io/badge/Tests-77%20Passing-2EA44F?style=for-the-badge&logo=pytest&logoColor=white" alt="77 Tests Passing" />
+
+  <img src="https://img.shields.io/badge/Build-Validated-2EA44F?style=for-the-badge" alt="Validated Build" />
+
+  <img src="https://img.shields.io/badge/Runtime-Offline%20Capable-5C2D91?style=for-the-badge" alt="Offline Capable" />
+
+  <img src="https://img.shields.io/badge/API-Local%20Ollama-FF6F00?style=for-the-badge" alt="Local Ollama API" />
+
+  <img src="https://img.shields.io/badge/Source-Git-FF4500?style=for-the-badge&logo=git&logoColor=white" alt="Git" />
+
+  <img src="https://img.shields.io/badge/Repository-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" />
+
+  <img src="https://img.shields.io/badge/Status-Solid%20Build-2EA44F?style=for-the-badge" alt="Solid Build" />
+
+</p>
+## Overview
+Local-first AI assistant powered by Ollama...
+
 **A local-first, offline-capable personal AI assistant for Windows**
 
 Angel is a native Windows desktop application built around local language-model
