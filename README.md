@@ -30,7 +30,7 @@
 
   <img src="https://img.shields.io/badge/Testing-Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest" />
 
-  <img src="https://img.shields.io/badge/Tests-77%20Passing-2EA44F?style=for-the-badge&logo=pytest&logoColor=white" alt="77 Tests Passing" />
+  <img src="https://img.shields.io/badge/Tests-78%20Passing-2EA44F?style=for-the-badge&logo=pytest&logoColor=white" alt="78 Tests Passing" />
 
   <img src="https://img.shields.io/badge/Build-Validated-2EA44F?style=for-the-badge" alt="Validated Build" />
 
