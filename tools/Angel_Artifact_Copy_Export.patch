@@ -1,0 +1,65 @@
+--- a/angel/ui.py
++++ b/angel/ui.py
+@@
+     def _insert_assistant_content(self, content: str) -> None:
+         parts = content.split("```")
+         for index, part in enumerate(parts):
+             if index % 2:
+                 code = part
+                 first_line, separator, remainder = code.partition("\n")
+-                if separator and len(first_line.strip()) < 30 and " " not in first_line.strip():
++                language = first_line.strip() if separator else "text"
++                if separator and len(first_line.strip()) < 30 and " " not in first_line.strip():
+                     code = remainder
+-                self.chat.insert("end", code.rstrip() + "\n", "code")
++                self._insert_artifact_block(language, code.rstrip())
+             else:
+                 if part:
+                     self.chat.insert("end", part, "angel_text")
+         if not content.endswith("\n"):
+             self.chat.insert("end", "\n", "angel_text")
++
++    def _insert_artifact_block(self, language: str, content: str) -> None:
++        """
++        Render generated files/code as artifacts instead of plain text.
++        Stores the latest artifact for future copy/save/export actions.
++        """
++
++        self.last_artifact = {
++            "language": language,
++            "content": content,
++        }
++
++        self.chat.insert(
++            "end",
++            f"\n[{language.upper()} ARTIFACT]\n",
++            "source_header"
++        )
++
++        self.chat.insert(
++            "end",
++            content + "\n",
++            "code"
++        )
++
++        self.chat.insert(
++            "end",
++            "\nArtifact stored. Copy/Save/Export actions available.\n",
++            "angel_text"
++        )
++
++    def copy_artifact(self) -> None:
++        """
++        Copy the most recent generated artifact.
++        """
++
++        if not hasattr(self, "last_artifact"):
++            self._set_thinking("No artifact available")
++            return
++
++        self.root.clipboard_clear()
++        self.root.clipboard_append(
++            self.last_artifact["content"]
++        )
++
++        self._set_thinking("Artifact copied")
