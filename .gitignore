@@ -1,46 +1,97 @@
+# ==========================================
+# ANGEL AI - Git Ignore Configuration
+# ==========================================
+
+
+# ==========================================
+# Python Environment
+# ==========================================
+
 .venv/
+venv/
+env/
+
 __pycache__/
 *.py[cod]
+*$py.class
+
 .pytest_cache/
+.pytest-*/
 .coverage
 htmlcov/
+
+
+# ==========================================
+# Build Outputs
+# ==========================================
+
 build/
 dist/
+package-build/
+package-output/
+
 *.spec.bak
-*.db
-*.db-shm
-*.db-wal
+
+Angel.exe
+_internal/
+
+
+# ==========================================
+# Logs & Runtime Reports
+# ==========================================
+
 *.log
+
+test-output/
+
 smoke-*.json
 acceptance-*.json
 *-acceptance*.json
-test-output/
-.pytest-*/
-Angel.exe
-_internal/
-package-build/
-package-output/
+
+# Generated Angel health reports
+bootstrap/reports/*.json
+
+# Recovery runtime logs
+bootstrap/logs/*.log
+
+
+# ==========================================
+# Local Databases
+# ==========================================
+
+*.db
+*.db-shm
+*.db-wal
+
+*.sqlite
+*.sqlite3
+
+
+# ==========================================
+# Angel Local Runtime Data
+# ==========================================
+
 data/
 cache/
+
 backups/
+
+# Local knowledge additions
 knowledge/
-models/
+
+# Local projects/workspaces
 projects/
+
+# Creator workspace
 creator/
 
-# Private configuration and credentials
-.env
-.env.*
-*.key
-*.pem
-*.pfx
-*.p12
-credentials*
-secrets*
-tokens*
-api_keys*
 
-# Local AI weights and checkpoints
+# ==========================================
+# AI Models
+# ==========================================
+
+models/
+
 *.gguf
 *.safetensors
 *.ckpt
@@ -48,7 +99,82 @@ api_keys*
 *.pth
 *.onnx
 
-# Operating-system/editor leftovers
+
+# ==========================================
+# Private Configuration
+# ==========================================
+
+.env
+.env.*
+
+credentials*
+secrets*
+tokens*
+
+api_keys*
+apikey*
+api-key*
+
+*.key
+*.pem
+*.pfx
+*.p12
+
+
+# ==========================================
+# Operating System Files
+# ==========================================
+
 .DS_Store
 Thumbs.db
 desktop.ini
+
+
+# ==========================================
+# Editors
+# ==========================================
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+
+# ==========================================
+# Temporary Files
+# ==========================================
+
+*.tmp
+*.temp
+*.bak
+*.old
+
+
+# ==========================================
+# Angel Recovery Seed Output
+# (Generated portable copies)
+# ==========================================
+
+ANGEL_SEED/
+Angel_Seed_*/
+Recovery_Output/
+
+
+# ==========================================
+# Raspberry Pi / Linux Runtime
+# ==========================================
+
+*.pid
+*.sock
+
+lost+found/
+
+
+# ==========================================
+# Hardware / Local Machine Notes
+# ==========================================
+
+machine-info.json
+local-config.json
+hardware-report.json
