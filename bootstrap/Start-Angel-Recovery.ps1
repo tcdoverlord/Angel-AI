@@ -58,6 +58,12 @@ Write-Host ""
 
 Write-AngelLog "Seed detected: $($Seed.seedName)"
 
+Write-Host "Checking environment..."
+Write-AngelLog "Running environment check"
+
+& "$BootstrapRoot\Check-Environment.ps1"
+
+Write-Host ""
 
 Write-Host "Running integrity verification..."
 Write-AngelLog "Running integrity verification"
