@@ -1,6 +1,16 @@
-# Angel Recovery Bootstrap Entry Point
+# Angel Bootstrap Recovery System v1
 
-$LogFolder = Join-Path $PSScriptRoot "logs"
+Write-Host "================================="
+Write-Host " ANGEL RECOVERY SYSTEM"
+Write-Host "================================="
+Write-Host ""
+
+$BootstrapRoot = $PSScriptRoot
+
+$ManifestPath = Join-Path $BootstrapRoot "manifests\angel-manifest.json"
+$SeedPath = Join-Path $BootstrapRoot "manifests\angel-seed.json"
+
+$LogFolder = Join-Path $BootstrapRoot "logs"
 
 if (!(Test-Path $LogFolder)) {
     New-Item -ItemType Directory -Path $LogFolder | Out-Null
@@ -8,35 +18,66 @@ if (!(Test-Path $LogFolder)) {
 
 $LogFile = Join-Path $LogFolder "angel-recovery.log"
 
+
 function Write-AngelLog {
     param($Message)
 
     $Time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$Time - $Message" | Out-File $LogFile -Append
-    Write-Host $Message
 }
 
-Write-Host "================================="
-Write-Host " ANGEL RECOVERY SYSTEM"
-Write-Host "================================="
-Write-Host ""
 
 Write-AngelLog "Recovery started"
 
-Write-AngelLog "Running integrity verification"
 
-& "$PSScriptRoot\Verify-Angel.ps1"
+if (!(Test-Path $SeedPath)) {
 
-if ($LASTEXITCODE -ne 0) {
-    Write-AngelLog "Integrity check failed"
-    Write-Host ""
-    Write-Host "Angel recovery stopped."
+    Write-Host "ERROR: Angel Seed identity missing"
+    Write-AngelLog "Seed identity missing"
     exit 1
+
 }
 
-Write-AngelLog "Integrity verification passed"
+
+$Seed = Get-Content $SeedPath | ConvertFrom-Json
+
+
+Write-Host "Angel Seed Detected"
+Write-Host ""
+
+Write-Host "Seed:"
+Write-Host $Seed.seedName
+
+Write-Host "Angel Version:"
+Write-Host $Seed.angelVersion
+
+Write-Host "Bootstrap:"
+Write-Host $Seed.bootstrapVersion
 
 Write-Host ""
-Write-Host "Angel is ready for recovery operations."
+
+Write-AngelLog "Seed detected: $($Seed.seedName)"
+
+
+Write-Host "Running integrity verification..."
+Write-AngelLog "Running integrity verification"
+
+
+& "$BootstrapRoot\Verify-Angel.ps1"
+
+
+if ($LASTEXITCODE -ne 0) {
+
+    Write-Host ""
+    Write-Host "Angel verification failed."
+    Write-AngelLog "Integrity verification failed"
+    exit 1
+
+}
+
+
+Write-Host ""
+Write-Host "ANGEL READY"
+Write-Host "Recovery preparation complete."
 
 Write-AngelLog "Recovery preparation complete"
