@@ -83,6 +83,33 @@ if ($LASTEXITCODE -ne 0) {
 
 
 Write-Host ""
+Write-Host "Generating recovery report..."
+
+$ReportFolder = Join-Path $BootstrapRoot "reports"
+
+if (!(Test-Path $ReportFolder)) {
+    New-Item -ItemType Directory -Path $ReportFolder | Out-Null
+}
+
+$ReportPath = Join-Path $ReportFolder "Angel-Recovery-Report.json"
+
+$Report = @{
+    angelVersion = $Seed.angelVersion
+    bootstrapVersion = $Seed.bootstrapVersion
+    computer = $env:COMPUTERNAME
+    timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+    environment = "verified"
+    integrity = "verified"
+    status = "ready"
+}
+
+$Report | ConvertTo-Json | Out-File $ReportPath -Encoding UTF8
+
+Write-Host "[OK] Recovery report created"
+
+Write-AngelLog "Recovery report generated"
+
+Write-Host ""
 Write-Host "ANGEL READY"
 Write-Host "Recovery preparation complete."
 
