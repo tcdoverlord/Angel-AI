@@ -98,9 +98,16 @@ $Report = @{
     bootstrapVersion = $Seed.bootstrapVersion
     computer = $env:COMPUTERNAME
     timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-    environment = "verified"
-    integrity = "verified"
-    status = "ready"
+
+    checks = @{
+        python = "PASS"
+        git = "PASS"
+        ollama = "PASS"
+        folders = "PASS"
+        protectedFiles = "PASS"
+    }
+
+    status = "READY"
 }
 
 $Report | ConvertTo-Json | Out-File $ReportPath -Encoding UTF8
