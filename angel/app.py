@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .brain import AngelBrain
+from .weather.weather_brain import WeatherBrain
 from .backups import BackupService, recover_database_if_needed
 from .bible import BibleService
 from .context import ContextBuilder
@@ -77,7 +78,7 @@ def create_services(data_dir: str | Path | None = None) -> AppServices:
     tools = create_tool_registry(
         database, settings, memory, search, logger.getChild("tools"), projects, knowledge, bible
     )
-    brain = AngelBrain(
+    brain = WeatherBrain(
         database,
         settings,
         context,

@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 # ============================================================
 # ANGEL BACKUP ENGINE - WINDOWS
@@ -37,9 +37,30 @@ function Test-DestinationSafe([string]$Path) {
     }
 
     $root = [System.IO.Path]::GetPathRoot($full)
-    if ([string]::IsNullOrWhiteSpace($root) -or
-        $full.Equals($root.TrimEnd('\'), [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "A drive root is not an acceptable backup destination."
+
+    if ([string]::IsNullOrWhiteSpace($root)) {
+        throw "Could not determine the destination drive."
+    }
+
+    $isDriveRoot = $full.Equals(
+        $root.TrimEnd('\'),
+        [System.StringComparison]::OrdinalIgnoreCase
+    )
+
+    if ($isDriveRoot) {
+        $driveLetter = $root.TrimEnd('\').TrimEnd(':')
+        $drive = Get-CimInstance Win32_LogicalDisk `
+            -Filter "DeviceID='$driveLetter`:'" `
+            -ErrorAction Stop
+
+        if ($null -eq $drive) {
+            throw "Could not identify the destination drive."
+        }
+
+        # DriveType 2 = removable disk.
+        if ([int]$drive.DriveType -ne 2) {
+            throw "A drive root is only permitted for a removable USB drive."
+        }
     }
 
     return $full
@@ -140,21 +161,102 @@ Write-Host "------------------------------------------------------------"
 $confirm = Read-Host "Proceed with this backup? (Y/N)"
 if ($confirm -notmatch '^[Yy]$') { Fail-Angel "BACKUP CANCELLED" "The backup was not started." }
 
+$exclude = @(
+    "$AngelRoot\.git",
+    "$AngelRoot\models",
+    "$AngelRoot\cache",
+    "$AngelRoot\backups"
+)
+
 try {
-    $free = Get-FreeBytes $destination
-    $freeGB = [math]::Round($free / 1GB, 2)
     Write-Host ""
-    Write-Host "Available destination space: $freeGB GB" -ForegroundColor DarkGray
-    if ($free -lt 1GB) { Fail-Angel "BACKUP BLOCKED" "Less than 1 GB is available on the destination drive." }
+    Write-Host "Calculating backup payload..." -ForegroundColor Cyan
+
+    $excludedRoots = $exclude |
+        ForEach-Object {
+            [System.IO.Path]::GetFullPath($_).TrimEnd('\')
+        }
+
+    $payloadBytes = [int64]0
+    $payloadFiles = [int64]0
+
+    Get-ChildItem -LiteralPath $AngelRoot -File -Recurse -Force -ErrorAction Stop |
+        ForEach-Object {
+            $filePath = $_.FullName
+            $excluded = $false
+
+            foreach ($excludedRoot in $excludedRoots) {
+                if ($filePath.Equals(
+                    $excludedRoot,
+                    [System.StringComparison]::OrdinalIgnoreCase
+                ) -or
+                    $filePath.StartsWith(
+                        $excludedRoot + "\",
+                        [System.StringComparison]::OrdinalIgnoreCase
+                    )) {
+                    $excluded = $true
+                    break
+                }
+            }
+
+            if (-not $excluded) {
+                $payloadBytes += [int64]$_.Length
+                $payloadFiles++
+            }
+        }
+
+    # Keep 10% headroom, with a 100 MB minimum safety margin.
+    $safetyMargin = [math]::Max(
+        [int64](100MB),
+        [int64][math]::Ceiling($payloadBytes * 0.10)
+    )
+
+    $requiredBytes = $payloadBytes + $safetyMargin
+    $free = Get-FreeBytes $destination
+
+    $payloadMB = [math]::Round($payloadBytes / 1MB, 2)
+    $marginMB = [math]::Round($safetyMargin / 1MB, 2)
+    $requiredMB = [math]::Round($requiredBytes / 1MB, 2)
+    $freeGB = [math]::Round($free / 1GB, 2)
+
+    Write-Host ""
+    Write-Host "BACKUP CAPACITY PREFLIGHT" -ForegroundColor Cyan
+    Write-Host "------------------------------------------------------------"
+    Write-Host "Eligible files      : $payloadFiles"
+    Write-Host "Backup payload      : $payloadMB MB"
+    Write-Host "Safety margin       : $marginMB MB"
+    Write-Host "Required space      : $requiredMB MB"
+    Write-Host "Available space     : $freeGB GB"
+    Write-Host "------------------------------------------------------------"
+
+    if ($free -lt $requiredBytes) {
+        Fail-Angel "BACKUP BLOCKED" (
+            "Insufficient destination space.`n`n" +
+            "Required: $requiredMB MB`n" +
+            "Available: $freeGB GB`n" +
+            "The backup was NOT started."
+        )
+    }
+
+    Write-Host "PASS  Sufficient destination space." -ForegroundColor Green
 } catch {
-    Fail-Angel "BACKUP BLOCKED" "Could not verify destination free space.`n$($_.Exception.Message)"
+    if ($_.Exception.Message -like "BACKUP BLOCKED*") {
+        throw
+    }
+
+    Fail-Angel "BACKUP BLOCKED" (
+        "Could not calculate backup payload or verify destination free space.`n" +
+        $_.Exception.Message
+    )
 }
 
 $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $backupId = "Angel_Backup_$timestamp"
 $backupPath = Join-Path $destination $backupId
 
-if (Test-Path -LiteralPath $backupPath) { Fail-Angel "BACKUP BLOCKED" "The generated backup directory already exists." }
+if (Test-Path -LiteralPath $backupPath) {
+    Fail-Angel "BACKUP BLOCKED" "The generated backup directory already exists."
+}
 
 New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
 $started = Get-Date
@@ -176,13 +278,6 @@ $manifest | ConvertTo-Json -Depth 5 |
 
 Write-Host ""
 Write-Host "Running backup..." -ForegroundColor Cyan
-
-$exclude = @(
-    "$AngelRoot\.git",
-    "$AngelRoot\models",
-    "$AngelRoot\cache",
-    "$AngelRoot\backups"
-)
 
 & robocopy $AngelRoot $backupPath /E /R:2 /W:2 /XJ /XD $exclude
 $result = $LASTEXITCODE

@@ -45,7 +45,7 @@ def test_context_includes_web_tool_results(services):
         "What is current?",
         tool_results=["Searched the web successfully. Example result https://example.com"],
     )
-    assert "TOOL RESULTS FOR THIS REQUEST" in messages[0]["content"]
+    assert "Searched the web successfully." in messages[0]["content"]
     assert "https://example.com" in messages[0]["content"]
 
 

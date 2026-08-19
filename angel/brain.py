@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 import re
@@ -79,7 +79,7 @@ class AngelBrain:
             effective_text = quick_prompt + (
                 f"\nUser note: {clean_user_text}" if clean_user_text else ""
             )
-            display_text = f"{mode}" + (f" — {clean_user_text}" if clean_user_text else "")
+            display_text = f"{mode}" + (f" Ã¢â‚¬â€ {clean_user_text}" if clean_user_text else "")
 
         attachment_text = attachment_context(prepared_attachments)
         if attachment_text:
@@ -95,21 +95,25 @@ class AngelBrain:
         current = self.settings.get()
         loop = ToolLoop(self.tools, self.maximum_tool_calls)
         sources: list[dict[str, str]] = []
-        preflight_results: list[str] = []
+        preflight_results: list[ToolResult] = []
+        seen_tool_requests: set[str] = set()
 
         planned = self._planned_tool(
             clean_user_text, mode, current.location, current.connectivity_mode
         )
         if planned is not None:
-            self._status(status_callback, f"Using {planned.name.replace('_', ' ')}…")
+            self._status(status_callback, f"Using {planned.name.replace('_', ' ')}Ã¢â‚¬Â¦")
             result = loop.execute(planned)
-            preflight_results.append(result.content)
+            preflight_results.append(result)
             self._merge_sources(sources, result)
             if planned.name == "search_bible" and result.success:
-                # Constitutional answers come directly from approved storage. A replaceable
-                # model is not allowed to paraphrase them into a different rule or instruction.
-                return self._finish(
-                    conversation_id, result.content, sources, loop.calls, True, mode, cancel_event
+                # Bible material is authoritative internal context, not an automatic
+                # user-facing response. Continue through the normal model-response path
+                # so Angel can answer the human naturally while the approved Bible remains
+                # available to the reasoning context.
+                self.logger.debug(
+                    "Angel Bible result retained as internal context for conversation %s",
+                    conversation_id,
                 )
 
         messages = self.context.build(
@@ -122,7 +126,7 @@ class AngelBrain:
                 else ""
             ),
         )
-        self._status(status_callback, "Thinking…")
+        self._status(status_callback, "ThinkingÃ¢â‚¬Â¦")
 
         try:
             if current.connectivity_mode == "Offline" and not self.ollama.is_local_url(current.ollama_url):
@@ -149,7 +153,17 @@ class AngelBrain:
                         mode,
                         cancel_event,
                     )
-                self._status(status_callback, f"Using {request.name.replace('_', ' ')}…")
+                request_key = request.name + ":" + repr(sorted(request.arguments.items()))
+                if request_key in seen_tool_requests:
+                    final = (
+                        "I stopped because the local model repeated the same tool request. "
+                        "I won't keep looping or pretend the task completed."
+                    )
+                    return self._finish(
+                        conversation_id, final, sources, loop.calls, True, mode, cancel_event
+                    )
+                seen_tool_requests.add(request_key)
+                self._status(status_callback, f"Using {request.name.replace('_', ' ')}Ã¢â‚¬Â¦")
                 try:
                     result = loop.execute(request)
                 except UnknownToolError:
@@ -165,8 +179,8 @@ class AngelBrain:
                     )
                     return self._finish(conversation_id, final, sources, loop.calls, True, mode, cancel_event)
                 self._merge_sources(sources, result)
-                messages = self.context.append_tool_exchange(messages, raw_response, result.content)
-                self._status(status_callback, "Thinking with the tool result…")
+                messages = self.context.append_tool_exchange(messages, raw_response, result)
+                self._status(status_callback, "Thinking with the tool resultÃ¢â‚¬Â¦")
                 raw_response = self.ollama.chat(current.ollama_url, current.model, messages)
         except OllamaError as exc:
             self.logger.info("Local AI unavailable during response: %s", exc)
@@ -198,9 +212,26 @@ class AngelBrain:
     @staticmethod
     def _clean_response(response: str) -> str:
         clean = response.replace("ANGEL_FINAL_RESPONSE", "").strip()
+
+        # The model should normally never expose internal governance/context labels.
+        # This is intentionally conservative: remove only known wrapper labels, not
+        # legitimate user-requested Bible content.
+        clean = re.sub(
+            r"^Angel Bible matches\s*\[BIBLE\s*[â€”-]\s*HUMAN-APPROVED,\s*READ ONLY\]:\s*",
+            "",
+            clean,
+            flags=re.IGNORECASE,
+        )
+        clean = re.sub(
+            r"^(?:TOOL RESULTS FOR THIS REQUEST\s*\[DATA[^\]]*\]:?|"
+            r"INTERNAL GOVERNANCE RESULT[^:]*:?)\s*",
+            "",
+            clean,
+            flags=re.IGNORECASE,
+        )
         clean = re.sub(
             r"^(?:as (?:an? )?(?:llama|qwen|gemma|mistral|ollama|language) (?:ai |language )?model|"
-            r"i(?:'m| am) (?:an? )?(?:ollama|llama|qwen|gemma|mistral) (?:ai |language )?model)\s*[,.:—-]*\s*",
+            r"i(?:'m| am) (?:an? )?(?:ollama|llama|qwen|gemma|mistral) (?:ai |language )?model)\s*[,.:Ã¢â‚¬â€-]*\s*",
             "",
             clean,
             flags=re.IGNORECASE,
@@ -317,16 +348,16 @@ class AngelBrain:
 
     @staticmethod
     def _offline_fallback(
-        tool_results: list[str], sources: list[dict[str, str]]
+        tool_results: list[ToolResult], sources: list[dict[str, str]]
     ) -> str:
         if tool_results:
             prefix = "The local AI is offline, but the safe tool completed:\n\n"
             if sources:
-                return prefix + tool_results[-1] + "\n\nThe verified sources are listed below."
-            return prefix + tool_results[-1]
+                return prefix + tool_results[-1].content + "\n\nThe verified sources are listed below."
+            return prefix + tool_results[-1].content
         return (
             "Angel Local AI is offline right now. Your conversation is saved, and Memory and Settings remain "
-            "available. Start Ollama or use Settings → Recheck Connection, then try again."
+            "available. Start Ollama or use Settings Ã¢â€ â€™ Recheck Connection, then try again."
         )
 
     @staticmethod

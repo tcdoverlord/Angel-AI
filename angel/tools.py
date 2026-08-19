@@ -264,7 +264,7 @@ def create_tool_registry(
         items = bible.search(str(query), max(1, min(int(limit), 10)))
         if not items:
             return ToolResult("search_bible", True, "No matching Angel Bible entry was found", data=[], provenance="BIBLE")
-        content = "Angel Bible matches [BIBLE — HUMAN-APPROVED, READ ONLY]:\n\n" + "\n\n".join(
+        content = "\n\n".join(
             f"{item['section']} / {item['title']} [{item['level']}]:\n{item['content']}"
             for item in items
         )

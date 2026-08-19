@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 # ============================================================
 # ANGEL BACKUP VERIFIER - WINDOWS
@@ -15,6 +15,45 @@ function Fail-Verify([string]$Message) {
 }
 
 function Get-BackupFolder {
+    Add-Type -AssemblyName System.Windows.Forms
+
+    function Select-BackupFolder {
+        $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $dialog.Description = "Choose the folder containing your Angel backups."
+        $dialog.ShowNewFolderButton = $false
+
+        try {
+            if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+                if ([string]::IsNullOrWhiteSpace($dialog.SelectedPath)) {
+                    return $null
+                }
+
+                return ([System.IO.Path]::GetFullPath(
+                    $dialog.SelectedPath
+                )).TrimEnd('\')
+            }
+
+            return $null
+        }
+        finally {
+            $dialog.Dispose()
+        }
+    }
+
+    function Test-BackupLocation([string]$Path) {
+        if ([string]::IsNullOrWhiteSpace($Path)) {
+            Fail-Verify "No backup location was selected."
+        }
+
+        $full = [System.IO.Path]::GetFullPath($Path).TrimEnd('\')
+
+        if (-not (Test-Path -LiteralPath $full -PathType Container)) {
+            Fail-Verify "The selected backup location does not exist:`n$full"
+        }
+
+        return $full
+    }
+
     Write-Host ""
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "                 ANGEL BACKUP VERIFIER" -ForegroundColor Cyan
@@ -22,78 +61,152 @@ function Get-BackupFolder {
     Write-Host ""
     Write-Host "Choose where your Angel backups are stored:"
     Write-Host ""
-    Write-Host "  1. Backup Test"
-    Write-Host "     D:\Angel_Backup_Test"
+    Write-Host "  1. Browse for a folder"
+    Write-Host "     Opens the Windows folder picker"
     Write-Host ""
-    Write-Host "  2. Permanent Backups"
-    Write-Host "     D:\Angel_Backups"
-    Write-Host ""
-    Write-Host "  3. Another existing folder"
-    Write-Host "     Example: D:\2027_Budget"
+    Write-Host "  2. Enter a path manually"
+    Write-Host "     Example: G:\Angel_Backups"
     Write-Host ""
     Write-Host "  0. Cancel"
     Write-Host ""
+
     $choice = Read-Host "Enter a number"
 
     switch ($choice) {
-        "1" { return "D:\Angel_Backup_Test" }
-        "2" { return "D:\Angel_Backups" }
-        "3" {
+        "1" {
+            try {
+                $selected = Select-BackupFolder
+            }
+            catch {
+                Fail-Verify (
+                    "The Windows folder picker could not be opened.`n" +
+                    $_.Exception.Message
+                )
+            }
+
+            if ([string]::IsNullOrWhiteSpace($selected)) {
+                return $null
+            }
+
+            return Test-BackupLocation $selected
+        }
+
+        "2" {
+            try {
+                $selected = Select-BackupFolder
+            }
+            catch {
+                Fail-Verify (
+                    "The Windows folder picker could not be opened.`n" +
+                    $_.Exception.Message
+                )
+            }
+
+            if ([string]::IsNullOrWhiteSpace($selected)) {
+                Fail-Verify "No backup location was selected."
+            }
+
+            return Test-BackupLocation $selected
+        }
+
+        "4" {
             while ($true) {
                 Write-Host ""
                 Write-Host "CUSTOM BACKUP LOCATION" -ForegroundColor Cyan
                 Write-Host "------------------------------------------------------------"
-                Write-Host "Enter an EXISTING folder using this format:"
-                Write-Host ""
-                Write-Host "  D:\FolderName"
+                Write-Host "Enter an EXISTING folder containing Angel backups."
                 Write-Host ""
                 Write-Host "Examples:"
-                Write-Host "  D:\2027_Budget"
-                Write-Host "  D:\Angel_Backup_Test"
                 Write-Host "  D:\Angel_Backups"
+                Write-Host "  G:\Angel_Backups"
+                Write-Host "  E:\MyAngelRecovery"
                 Write-Host ""
-                Write-Host "IMPORTANT: Angel will NEVER create the folder you enter here."
+                Write-Host "IMPORTANT: Angel will NEVER create a folder during verification."
                 Write-Host "Type 0 to cancel."
                 Write-Host ""
-                $p = (Read-Host "Existing folder path").Trim()
-                if ($p -eq "0") { return $null }
 
-                if ($p -match '^[A-Za-z]:\s+[/\\]' -or $p -match '^[A-Za-z]:\s*\.' -or
-                    $p -match '^\.[/\\]' -or $p -notmatch '^[A-Za-z]:\\') {
+                $p = (Read-Host "Existing folder path").Trim()
+
+                if ($p -eq "0") {
+                    return $null
+                }
+
+                if ($p -match '^[A-Za-z]:\s+[/\\]' -or
+                    $p -match '^[A-Za-z]:\s*\.' -or
+                    $p -match '^\.[/\\]' -or
+                    $p -notmatch '^[A-Za-z]:\\') {
+
                     Write-Host ""
                     Write-Host "============================================================" -ForegroundColor Red
-                    Write-Host "                 BACKUP NOT PERFORMED" -ForegroundColor Red
+                    Write-Host "                 VERIFICATION BLOCKED" -ForegroundColor Red
                     Write-Host "============================================================" -ForegroundColor Red
                     Write-Host ""
-                    Write-Host "BACKUP NOT PERFORMED - USE PROPER ADDRESS" -ForegroundColor Red
+                    Write-Host "USE PROPER ADDRESS" -ForegroundColor Red
                     Write-Host ""
-                    Write-Host "Use an existing folder such as:" -ForegroundColor Yellow
-                    Write-Host "  D:\FolderName"
+                    Write-Host "Use an existing Windows folder such as:" -ForegroundColor Yellow
+                    Write-Host "  D:\Angel_Backups"
+                    Write-Host "  G:\Angel_Backups"
                     Write-Host ""
+                    Write-Host "No directory was created."
+                    continue
+                }
+
+                if ($p -match '[\*\?\<\>\|"]') {
+                    Write-Host ""
+                    Write-Host "Invalid path characters detected." -ForegroundColor Red
                     Write-Host "No directory was created."
                     continue
                 }
 
                 if (-not (Test-Path -LiteralPath $p -PathType Container)) {
                     Write-Host ""
-                    Write-Host "BACKUP NOT PERFORMED - FOLDER NOT FOUND" -ForegroundColor Red
-                    Write-Host "Angel did not create it."
+                    Write-Host "The selected folder does not exist:" -ForegroundColor Yellow
+                    Write-Host "  $p"
+                    Write-Host ""
+                    Write-Host "Angel will NEVER create a verification folder."
                     continue
                 }
-                return [System.IO.Path]::GetFullPath($p).TrimEnd('\')
+
+                return Test-BackupLocation $p
             }
         }
-        "0" { return $null }
-        default { Fail-Verify "Invalid menu choice." }
+
+        "0" {
+            return $null
+        }
+
+        default {
+            Fail-Verify "Invalid menu choice."
+        }
     }
 }
 
-$root = Get-BackupFolder
-if ([string]::IsNullOrWhiteSpace($root)) { exit 0 }
+$checks = New-Object System.Collections.Generic.List[object]
 
-$backups = @(Get-ChildItem -LiteralPath $root -Directory -Force -ErrorAction Stop |
-    Where-Object { $_.Name -like "Angel_Backup_*" } |
-    Sort-Object LastWriteTime -Descending)
+function Check($name, $pass, $detail) {
+    $checks.Add([PSCustomObject]@{
+        Check = $name
+        Status = if ($pass) { "PASS" } else { "FAIL" }
+        Detail = $detail
+    })
+}
+
+$root = Get-BackupFolder
+
+if ([string]::IsNullOrWhiteSpace($root)) {
+    Write-Host ""
+    Write-Host "VERIFICATION CANCELLED" -ForegroundColor Yellow
+    exit 0
+}
+
+try {
+    $backups = @(Get-ChildItem -LiteralPath $root -Directory -Force -ErrorAction Stop |
+        Where-Object { $_.Name -like "Angel_Backup_*" } |
+        Sort-Object LastWriteTime -Descending)
+}
+catch {
+    Fail-Verify "Could not read the selected backup location:`n$root`n`n$($_.Exception.Message)"
+}
 
 if ($backups.Count -eq 0) {
     Fail-Verify "No Angel_Backup_* folders were found in:`n$root"
@@ -102,37 +215,45 @@ if ($backups.Count -eq 0) {
 Write-Host ""
 Write-Host "AVAILABLE ANGEL BACKUPS" -ForegroundColor Cyan
 Write-Host "------------------------------------------------------------"
+
 for ($i = 0; $i -lt $backups.Count; $i++) {
     Write-Host "  $($i + 1). $($backups[$i].Name)"
     Write-Host "     Last modified: $($backups[$i].LastWriteTime)"
 }
+
 Write-Host ""
 Write-Host "  0. Cancel"
 Write-Host ""
 
 $n = Read-Host "Choose backup number"
-if ($n -eq "0") { exit 0 }
+
+if ($n -eq "0") {
+    Write-Host ""
+    Write-Host "VERIFICATION CANCELLED" -ForegroundColor Yellow
+    exit 0
+}
 
 [int]$index = 0
-if (-not [int]::TryParse($n, [ref]$index) -or $index -lt 1 -or $index -gt $backups.Count) {
+
+if (-not [int]::TryParse($n, [ref]$index) -or
+    $index -lt 1 -or
+    $index -gt $backups.Count) {
     Fail-Verify "Invalid backup selection."
 }
 
 $backupPath = $backups[$index - 1].FullName
 
 Write-Host ""
-Write-Host "Selected backup:"
+Write-Host "Selected backup:" -ForegroundColor Cyan
 Write-Host "  $backupPath"
-$confirm = Read-Host "Verify this backup? (Y/N)"
-if ($confirm -notmatch '^[Yy]$') { exit 0 }
+Write-Host ""
 
-$checks = [System.Collections.Generic.List[object]]::new()
-function Check($name, $pass, $detail) {
-    $checks.Add([PSCustomObject]@{
-        Check = $name
-        Status = if ($pass) { "PASS" } else { "FAIL" }
-        Detail = $detail
-    })
+$confirm = Read-Host "Verify this backup? (Y/N)"
+
+if ($confirm -notmatch '^[Yy]$') {
+    Write-Host ""
+    Write-Host "VERIFICATION CANCELLED" -ForegroundColor Yellow
+    exit 0
 }
 
 $manifestPath = Join-Path $backupPath "backup-manifest.json"

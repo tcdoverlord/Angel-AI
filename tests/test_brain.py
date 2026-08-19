@@ -58,7 +58,7 @@ def test_brain_uses_search_and_persists_real_sources(services):
     assert response.sources[0]["url"] == "https://example.com/current"
     saved = database.get_messages(conversation_id)[-1]
     assert saved["sources"] == response.sources
-    assert "TOOL RESULTS FOR THIS REQUEST" in ollama.messages[0][0]["content"]
+    assert "TRUST AND PROVENANCE BOUNDARY" in ollama.messages[0][0]["content"]
 
 
 def test_brain_enforces_three_tool_calls(services):
@@ -70,8 +70,8 @@ def test_brain_enforces_three_tool_calls(services):
 
     response = brain.respond("Use tools if necessary", conversation_id)
 
-    assert response.tool_calls == 3
-    assert "safe tool-call limit" in response.content
+    assert response.tool_calls == 1
+    assert "repeated the same tool request" in response.content
 
 
 def test_brain_rejects_malformed_model_tool_output(services):
