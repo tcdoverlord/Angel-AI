@@ -1,5 +1,14 @@
 # Angel AI Bootstrap System
 
+## Quick Backup
+
+From PowerShell:
+
+```powershell
+Set-Location D:\Angel_AI
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\bootstrap\Backup-Angel.ps1
+```
+
 ## Purpose
 
 The Angel AI Bootstrap system is the recovery foundation that allows Angel to be restored, verified, and started from a clean backup or portable seed.
