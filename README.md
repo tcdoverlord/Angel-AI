@@ -1,4 +1,39 @@
+# 🪽 How You Can Contribute to Angel AI
+
+> **We would love contributors.**
+>
+> If you want to help develop, test, document, repair, or expand Angel AI, please start by looking in the **`Rusty/` folder**.
+>
+> The Rusty folder contains the contributor quick start, active work assignments, cross-machine testing information, current project state, architecture notes, recovery information, and engineering continuity documents.
+>
+> **Please read `Rusty/CONTRIBUTOR-QUICKSTART.md` and `Rusty/CONTRIBUTOR-TEAM.md` before starting work.**
+>
+> This helps contributors and their AI assistants get up to speed quickly, avoid solving the same problems twice, and leave useful test results for people working on different computers.
+>
+> **Build together. Test together. Share the knowledge. 🪽**
+
+---
+
 # Angel AI
+
+> 🪽 **Genesis 1.0 — Released**
+>
+> **Next Work in Progress: Current Information & WeatherBrain Integration**
+>
+> The next development milestone is focused on making Angel reliably use her
+> current-information capabilities: date/time and weather retrieval through
+> the dedicated WeatherBrain path, with honest tool-failure reporting and no
+> dependence on generic web search when a purpose-built capability is available.
+>
+> **What to expect next**
+> - WeatherBrain tool registration and routing verification
+> - Reliable current weather retrieval
+> - Current date/time integration validation
+> - Clear separation between live information and Angel's stored knowledge
+> - Tests covering successful retrieval and safe failure behavior
+>
+> Genesis 1.0 is the protected foundation. Development continues forward from
+> the `v1.0.0` GitHub checkpoint rather than rewriting the release.
 
 ![Angel AI Hero](videos/Angel_AI_Hero_Readme.gif)
 
