@@ -61,6 +61,18 @@ def test_brain_uses_search_and_persists_real_sources(services):
     assert "TRUST AND PROVENANCE BOUNDARY" in ollama.messages[0][0]["content"]
 
 
+def test_brain_plans_combined_date_and_time_request(services):
+    database, _settings, _memory = services
+    conversation_id = database.create_conversation()
+    ollama = SequenceOllama(["The current date and time are available."])
+    brain = make_brain(services, ollama)
+
+    response = brain.respond("What time and date is it?", conversation_id)
+
+    assert response.tool_calls == 1
+    assert "Local date:" in ollama.messages[0][0]["content"]
+    assert "Local time:" in ollama.messages[0][0]["content"]
+
 def test_brain_enforces_three_tool_calls(services):
     database, _settings, _memory = services
     conversation_id = database.create_conversation()

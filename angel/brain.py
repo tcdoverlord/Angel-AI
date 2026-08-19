@@ -280,10 +280,32 @@ class AngelBrain:
 
         if re.search(r"\bwhat (?:do you remember|have you remembered) about\b", lowered):
             return ToolRequest("search_memory", {"query": text, "limit": 6})
-        if re.search(
-            r"\b(what(?:'s| is) (?:the )?(?:local )?(?:date|time)|what day is it|today'?s date)\b",
-            lowered,
-        ):
+        date_time_request = (
+            re.search(
+                r"\bwhat\s+(?:the\s+)?(?:local\s+)?(?:date|time)\s+is\s+it\b",
+                lowered,
+            )
+            or re.search(
+                r"\bwhat\s+(?:the\s+)?(?:date|time)\s+and\s+(?:the\s+)?(?:date|time)\s+is\s+it\b",
+                lowered,
+            )
+            or re.search(
+                r"\bwhat\s+is\s+(?:the\s+)?(?:current\s+|local\s+)?"
+                r"(?:date|time)(?:\s+and\s+(?:the\s+)?(?:current\s+|local\s+)?"
+                r"(?:date|time))?\b",
+                lowered,
+            )
+            or re.search(
+                r"\b(?:tell me|give me|show me)\s+(?:the\s+)?"
+                r"(?:current\s+|local\s+)?(?:date|time)"
+                r"(?:\s+and\s+(?:the\s+)?(?:current\s+|local\s+)?"
+                r"(?:date|time))?\b",
+                lowered,
+            )
+            or re.search(r"\bwhat day is it\b", lowered)
+            or re.search(r"\btoday'?s date\b", lowered)
+        )
+        if date_time_request:
             return ToolRequest("current_datetime", {})
 
         if re.search(
