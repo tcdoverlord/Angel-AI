@@ -1,20 +1,24 @@
-# Angel Linux Backup Engine
+# Angel Linux Backup — Safe Dependency Policy
 
-This version adds:
+Angel never installs Linux system packages automatically.
 
-- Menu-driven destination selection.
-- GUI folder picker when Zenity/KDialog is available.
-- Optional, user-approved Zenity installation.
-- Detection of APT, DNF, Pacman, and Zypper.
-- Manual absolute-path fallback.
-- Clear examples of valid and invalid Linux paths.
-- Explicit confirmation before creating a destination.
-- Explicit confirmation before starting a backup.
-- Protected Linux system destinations.
-- Protection against backing up inside the live Angel project.
-- Free-space check.
-- Symlink-safe backup behavior.
-- Shared Angel backup manifest/report contract.
-- `rsync` preferred, with a safe fallback when unavailable.
+Option 3 uses Zenity or KDialog only if already installed. If neither is
+available, Angel explains how the user can install Zenity and leaves option 4
+available for manual path entry.
 
-The script does not install anything unless the user explicitly answers Y.
+No sudo commands are executed by Angel.
+
+Common commands:
+
+Ubuntu / Debian:
+  sudo apt update
+  sudo apt install zenity
+
+Fedora:
+  sudo dnf install zenity
+
+Arch:
+  sudo pacman -S zenity
+
+openSUSE:
+  sudo zypper install zenity
