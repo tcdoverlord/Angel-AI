@@ -1,5 +1,24 @@
 # Angel AI
 
+> 🪽 **Genesis 1.0 — Released**
+>
+> **Next Work in Progress: Current Information & WeatherBrain Integration**
+>
+> The next development milestone is focused on making Angel reliably use her
+> current-information capabilities: date/time and weather retrieval through
+> the dedicated WeatherBrain path, with honest tool-failure reporting and no
+> dependence on generic web search when a purpose-built capability is available.
+>
+> **What to expect next**
+> - WeatherBrain tool registration and routing verification
+> - Reliable current weather retrieval
+> - Current date/time integration validation
+> - Clear separation between live information and Angel's stored knowledge
+> - Tests covering successful retrieval and safe failure behavior
+>
+> Genesis 1.0 is the protected foundation. Development continues forward from
+> the `v1.0.0` GitHub checkpoint rather than rewriting the release.
+
 ![Angel AI Hero](videos/Angel_AI_Hero_Readme.gif)
 
 <p align="center">
