@@ -84,3 +84,34 @@ def test_context_includes_attachment_metadata_and_extracted_text(services):
     assert "notes.txt" in history
     assert "Useful extracted notes" in history
     assert "C:/private/path" not in history
+
+
+class FakeKnowledge:
+    def context(self, user_message, limit=4):
+        return (
+            "RustyReadme.md\n"
+            "Indexed documentation mentioning rusty/ARCHITECTURE.md"
+        )
+
+
+def test_context_distinguishes_indexed_knowledge_from_live_filesystem(services):
+    database, settings, memory = services
+    conversation_id = database.create_conversation()
+
+    messages = ContextBuilder(
+        database,
+        settings,
+        memory,
+        knowledge=FakeKnowledge(),
+    ).build(
+        conversation_id,
+        "Inspect the Rusty project",
+    )
+
+    system = messages[0]["content"]
+
+    assert "RELEVANT LOCAL KNOWLEDGE DATA [RETRIEVED" in system
+    assert "RustyReadme.md" in system
+    assert "LOCAL KNOWLEDGE ≠ LIVE FILESYSTEM ACCESS" in system
+    assert "Retrieved or indexed knowledge does not prove that Angel inspected" in system
+    assert "filesystem state is UNKNOWN" in system
