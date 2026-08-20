@@ -1,70 +1,114 @@
 # Angel AI — Test Baseline
 
-## Genesis 1.0 Baseline
+## Current Version Position
 
-The project's virtual environment was used.
+```text
+Current development: Genesis v1.1
+Target: Genesis v1.2
+```
+
+## Historical Genesis 1.0 Baseline
 
 Command:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
+.\.venv\Scripts\python.exe -m pytest .	ests -q
 ```
 
-Verified result:
+Verified result during Genesis 1.0:
 
 ```text
 85 passed in 12.42s
 ```
 
-## Git Validation
+## Current Rule
 
-Command:
+Before a significant v1.1 or v1.2 change:
 
-```powershell
-git diff --cached --check
-```
+1. inspect Git status;
+2. run the targeted baseline;
+3. record the actual current result;
+4. stop if the baseline unexpectedly fails.
 
-Verified result:
+Do not force the current suite to equal `85 passed`.
 
-```text
-No output / clean
-```
+## Test Discovery
 
-## Important Test Discovery Note
+Backup/recovery material can contain duplicate tests.
 
-The repository contains backup/recovery material that can contain duplicate test modules.
-
-Unrestricted:
+Use:
 
 ```powershell
-pytest -q
+.\.venv\Scripts\python.exe -m pytest .	ests -q
 ```
 
-previously caused duplicate-module collection errors.
+rather than unrestricted discovery.
 
-For the production test suite, target:
+## v1.2 Test Layers
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
-```
+### Unit
 
-## Next Weather Tests
+- capability contracts
+- schemas
+- Understand/Plan/Route logic
+- evidence structures
+- verification
+- recovery boundaries
 
-Relevant files:
+### Integration
 
-```text
-tests/test_current_info_planning.py
-tests/test_weather_pipeline.py
-```
+- Angel → Rusty
+- Rusty → capability
+- capability → result
+- result → evidence
+- evidence → verification
+- verified evidence → model
 
-The next change should add coverage for the real runtime tool-registration/dispatch path if that path is currently not covered.
+### Runtime
 
-## Manual Acceptance Test
+- real current datetime
+- real filesystem inspection
+- real project inspection
+- approved system capabilities
+
+### Safety
+
+- denied capability
+- missing permission
+- cancellation
+- failed execution
+- unverifiable result
+- recovery after failure
+
+## First Acceptance Test
 
 Ask:
 
-> Angel, what is today's date, what day of the week is it, and what is the current weather where I am? Tell me which information came from current-information tools.
+> Angel, what time is it?
 
-Then specifically test:
+Expected architecture:
+
+```text
+Angel
+→ Rusty
+→ Understand
+→ Plan
+→ Route
+→ current_datetime
+→ real system clock
+→ Evidence
+→ Verify
+→ response
+```
+
+The model must not supply the time from memory.
+
+## Weather Regression
+
+Ask:
 
 > Angel, use your weather-specific tool or WeatherBrain to get the current weather. Do not use search_web. If you do not have a weather-specific tool available, tell me exactly that.
+
+Record the actual runtime result.
+
+Do not convert an untested weather path into PASS.

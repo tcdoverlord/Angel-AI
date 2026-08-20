@@ -1,105 +1,191 @@
 # Angel AI — Next Build
 
+# Genesis v1.1 → v1.2 — Trustworthy Agent Brain
+
+## Current Position
+
+We are **currently working on v1.1**.
+
+The immediate mission is to prepare and execute the transition into v1.2 without breaking the working v1.1 foundation.
+
 ## Mission
 
-Repair and validate the live Current Information / WeatherBrain runtime path without disturbing Genesis 1.0.
+Upgrade Angel from a trustworthy conversational assistant into a trustworthy, evidence-driven engineering agent.
 
-## First Reproduction
+Do this without rewriting the existing project.
 
-Ask Angel:
+## Step 1 — Combined Architecture Contract
 
-> Angel, use your weather-specific tool or WeatherBrain to get the current weather. Do not use search_web. If you do not have a weather-specific tool available, tell me exactly that.
-
-Then record the exact response.
-
-## Inspect First
-
-Review:
+Formalize the team-facing Rusty Brain:
 
 ```text
-angel/weather/__init__.py
-angel/weather/combined.py
-angel/weather/date_time.py
-angel/weather/weather_brain.py
-angel/tools.py
-angel/brain.py
-angel/context.py
-angel/app.py
-tests/test_current_info_planning.py
-tests/test_weather_pipeline.py
+Understand
+Plan
+Route
+Execute
+Verify
+Recover
 ```
 
-Search for:
+Then define the professional internal contracts underneath it:
 
 ```text
-WeatherBrain
-weather
+intent/context
+capability discovery
+planning
+routing
+structured execution
+evidence
+verification
+recovery
+```
+
+Do not move code until the responsibility map is clear.
+
+## Step 2 — Capability Contract
+
+Create the generic model for a capability:
+
+```text
+name
+description
+input schema
+output schema
+risk
+permissions
+execute
+verify
+```
+
+## Step 3 — Current Date/Time
+
+Use `current_datetime` as the reference implementation.
+
+Required flow:
+
+```text
+request
+→ Understand
+→ Plan
+→ Route
+→ Execute
+→ structured result
+→ Evidence
+→ Verify
+→ model
+→ response
+```
+
+The model must not be the source of the live time.
+
+## Step 4 — Evidence / Verification
+
+Every live capability result must be distinguishable from stored knowledge.
+
+The model receives verified evidence rather than assumptions.
+
+## Step 5 — Angel ↔ Rusty Integration
+
+Integrate Rusty with the existing Python system through a controlled compatibility boundary.
+
+Do not delete `angel/brain.py` merely because Rusty is growing.
+
+## Step 6 — Planner
+
+Add bounded multi-step planning after individual capabilities are reliable.
+
+Example:
+
+```text
+Goal
+→ plan
+→ action
+→ observe
+→ verify
+→ next action
+→ final result
+```
+
+## Step 7 — Expand Capabilities
+
+Recommended order:
+
+```text
 current_datetime
-search_web
-allowlist
-dispatch
-tool
-registry
+filesystem
+system_information
+process_inspection
+Git
+PowerShell
+project_inspection
+web
 ```
 
-## Trace
+Each capability must be real, tested, documented, and safely bounded.
 
-Follow:
+## Step 8 — Memory Separation
+
+Separate:
+
+- current conversation
+- project memory
+- retrieved knowledge
+- live evidence
+
+## Step 9 — Engineering Agent
+
+Enable workflows such as:
 
 ```text
-User request
-  ↓
-Angel brain
-  ↓
-Tool selection
-  ↓
-Tool registry / allowlist
-  ↓
-WeatherBrain
-  ↓
-Weather backend
-  ↓
-Result
+inspect project
+diagnose issue
+plan repair
+execute safe action
+verify result
+report evidence
 ```
 
-Determine exactly where the live path differs from the passing tests.
+## Step 10 — EXE Candidate
+
+Package only after the brain/core milestone is stable.
+
+The executable is the delivery surface, not the architecture.
+
+## Baseline
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest .	ests -q
+```
+
+Historical Genesis 1.0 baseline:
+
+```text
+85 passed in 12.42s
+```
 
 ## Rules
 
 Do not:
 
-- rewrite the brain
-- make generic web search the permanent weather implementation
-- fabricate weather
-- weaken tool safety
-- modify `v1.0.0`
-- force-push
+- rewrite the brain prematurely
+- fabricate live information
+- bypass capability safety
+- modify v1.0.0
 - delete recovery material
+- force-push
+- claim runtime success without runtime evidence
 
-## Baseline Test
+## Acceptance
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
-```
+The v1.1 → v1.2 transition is moving correctly when Angel can reliably:
 
-Expected Genesis baseline:
-
-```text
-85 passed
-```
-
-## Acceptance Criteria
-
-Angel must be able to:
-
-- report the current date
-- report the current weather
-- provide temperature/conditions when available
-- report precipitation information when available
-- identify the tool/source path
-- honestly report failures
-- avoid treating stored knowledge as current weather
-
-Add regression tests for the actual runtime integration.
-
-Then create a focused Git checkpoint.
+1. understand a request;
+2. plan the required work;
+3. identify a real capability;
+4. route to it;
+5. execute it;
+6. collect evidence;
+7. verify it;
+8. reason about verified evidence;
+9. respond naturally;
+10. recover or stop honestly when evidence is unavailable.

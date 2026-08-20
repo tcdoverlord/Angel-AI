@@ -1,70 +1,119 @@
 # Angel AI — Engineering Decisions
 
+## Current Version Position
+
+The project is currently in the **Genesis v1.1 development line**.
+
+The next target is **Genesis v1.2**.
+
 ## Genesis 1.0 Is Protected
 
-Genesis 1.0 is the verified foundation:
+Historical verified foundation:
 
 ```text
 v1.0.0
 8b06235
 ```
 
-Future development moves forward from it.
+Do not rewrite the release.
+
+## Genesis v1.2 Direction
+
+The project is not solving capability problems by simply adding a larger model.
+
+The selected direction is:
+
+> **Build a stronger operational brain around the model.**
+
+## Combined Rusty Brain Decision
+
+The team-facing Rusty architecture is intentionally simple:
+
+```text
+Understand
+Plan
+Route
+Execute
+Verify
+Recover
+```
+
+These six functions are the canonical mental model.
+
+Professional internal concepts live underneath them.
+
+## Responsibility Split
+
+### Angel
+
+- identity
+- personality
+- conversation
+- user-facing response
+
+### Rusty
+
+- understanding
+- planning
+- routing
+- execution orchestration
+- evidence
+- verification
+- recovery
+
+### Ollama / LLM
+
+- language reasoning
+- response formulation
+- planning assistance where appropriate
+
+The model is not live system truth.
+
+### Capabilities
+
+- real operations
+- structured results
+- risk/permission declarations
+- verification
+
+### Knowledge
+
+- stored/project information
+- retrieved context
+- durable engineering knowledge
+
+Knowledge is not live evidence.
+
+## Current Date/Time
+
+`current_datetime` is the first reference capability.
+
+It must prove the complete execution lifecycle before the pattern is expanded.
+
+## Weather
+
+Weather-specific behavior remains owned by WeatherBrain.
+
+Generic web search must not become the permanent weather implementation merely because the WeatherBrain path currently needs investigation.
 
 ## Smallest Responsible Change
 
-Prefer focused repairs over rewrites.
+Prefer focused changes over rewrites.
 
 Preserve unrelated working behavior.
 
-## Modular Architecture
-
-Keep GUI, brain, tools, WeatherBrain, Rusty, PowerShell, backup, validation, and documentation separated where practical.
-
-## Weather Separation
-
-Weather functionality should use the dedicated WeatherBrain path rather than making generic web search the permanent weather implementation.
-
-## Honest Failure
-
-If current information cannot be retrieved, Angel must say so.
-
-Never fabricate current weather or date information.
-
-## Backup Safety
-
-Maintain multiple recovery copies.
-
-The intended protection model is:
-
-- working project
-- D: backup
-- offline USB backup
-
 ## Git Safety
-
-Git is the development safety system.
 
 Use local commits as stable checkpoints.
 
-Do not force-push or rewrite remote history without explicit approval.
+Do not force-push or rewrite shared history without explicit approval.
 
-## Recovery Material
+## Evidence Rule
 
-Recovery copies and `moveable/` are not automatically part of source releases.
+A model statement is not proof.
 
-Do not stage them blindly.
+A capability registration is not proof of execution.
 
-## Testing
+A successful execution is not automatically proof of correctness.
 
-Use the project's `.venv`.
-
-Target the real test suite:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
-```
-
-## Documentation
-
-Important architectural decisions and verified lessons should be carried forward into Rusty documentation.
+Live evidence must be validated before being given to the model as verified fact.

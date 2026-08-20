@@ -1,68 +1,70 @@
 # Angel AI — Known Issues
 
-## 1. Weather Runtime Integration
+## 1. Genesis v1.1 → v1.2 Brain Architecture
 
 ### Status
 
-**Open — next build**
+**Open — current transition work**
 
-Automated tests pass, but live runtime testing exposed a problem.
+Angel has stronger honesty boundaries but does not yet have the complete generalized operational lifecycle needed for a strong engineering-agent experience.
 
-Date/time retrieval worked through:
+Missing/immature areas include:
+
+- reusable capability contracts
+- centralized Understand/Plan/Route/Execute orchestration
+- structured evidence
+- verification
+- bounded multi-step planning
+- recovery behavior across multi-step tasks
+
+These should be built incrementally in Rusty.
+
+## 2. WeatherBrain Runtime Integration
+
+### Status
+
+**Open**
+
+Historical live testing showed:
 
 ```text
-current_datetime()
+current_datetime() → works
+weather → not proven through WeatherBrain
+search_web() fallback → failed network access
 ```
 
-Weather retrieval did not succeed. Angel attempted:
+Do not conclude that WeatherBrain itself is broken.
 
-```text
-search_web()
-```
+Investigate:
 
-and reported a network failure.
-
-### Unknown
-
-It is not yet proven whether the failure is:
-
-- WeatherBrain registration
-- tool allowlist
-- tool naming
+- registration
+- allowlist
+- naming
 - dispatch
 - runtime import
+- backend
 - model tool routing
-- weather backend
-- network access
 
-Inspect before changing.
+## 3. Test Discovery
 
-## 2. Test Discovery
-
-Backup/recovery trees can contain duplicate test modules.
+Backup/recovery material can contain duplicate tests.
 
 Use:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
+.\.venv\Scripts\python.exe -m pytest .	ests -q
 ```
 
-instead of unrestricted discovery.
+rather than unrestricted discovery.
 
-## 3. Untracked Recovery Material
+## 4. Documentation Transition
 
-Local untracked material remains outside Genesis 1.0:
+Some older documentation may describe Genesis 1.0 or earlier architectural terminology.
 
-```text
-bootstrap/Angel_Backup_Test/
-bootstrap/*.before-*
-moveable/
-```
+During v1.1 → v1.2 work, preserve useful historical information but use the current six-function Rusty Brain as the forward-looking architecture.
 
-Do not automatically remove it.
-
-## Issue Handling Rule
+## Issue Rule
 
 Record what is known, unknown, tested, and untested.
 
-Never claim a fix until the actual runtime behavior has been verified.
+Never claim a fix until the actual runtime path has been verified.

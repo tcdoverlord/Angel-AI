@@ -1,75 +1,119 @@
 # Angel AI — Current State
 
-## Verified Release
+## Current Version Position
 
-- Release: Genesis 1.0
-- Git tag: `v1.0.0`
-- Commit: `8b06235`
-- Branch: `main`
-- GitHub `origin/main`: verified at `8b06235`
+Angel is currently in the **Genesis v1.1 development line**.
 
-## Verified Tests
+The next target is **Genesis v1.2 — Trustworthy Agent Brain**.
 
-Command:
+This is a controlled architectural evolution, not a rewrite.
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
+## Protected Historical Release
+
+```text
+Genesis 1.0
+v1.0.0
+8b06235
 ```
 
-Result:
+The release remains protected.
+
+## Current System
+
+The project has:
+
+- a real Angel implementation;
+- Python brain/tooling;
+- knowledge systems;
+- Rusty continuity material;
+- tests;
+- an existing EXE/build path;
+- working and recovery material that must be preserved.
+
+The actual repository and Git state must be inspected before changes.
+
+## What v1.1 Has Established
+
+The current direction has prioritized:
+
+- honesty about unavailable live information;
+- modular components;
+- local model integration;
+- capability/tool infrastructure;
+- knowledge boundaries;
+- recovery and validation.
+
+The verified Genesis 1.0 baseline was:
 
 ```text
 85 passed in 12.42s
 ```
 
-`git diff --cached --check` was clean before the Genesis commit.
+`current_datetime()` was also observed working during earlier live testing.
 
-## Verified Backup State
+## Current Problem
 
-A permanent D: backup was successfully created and verified:
+Angel needs more than honesty.
 
-```text
-D:\Angel_Backups\Angel_Backup_2026-08-19_150550
-```
-
-A removable USB backup was also successfully created and verified.
-
-The intended protection model is:
-
-1. Working project
-2. D: backup
-3. Offline USB backup
-
-## Current Runtime Issue
-
-Live Angel testing showed:
-
-- `current_datetime()` works.
-- Weather retrieval did not work.
-- Angel attempted `search_web()` and reported a network failure.
-
-This does NOT yet prove that WeatherBrain itself is broken.
-
-The next task is to trace WeatherBrain registration, tool routing, dispatch, and runtime integration.
-
-## Important Local Untracked Material
-
-The following remained outside Genesis 1.0:
+The next gap is operational intelligence:
 
 ```text
-bootstrap/Angel_Backup_Test/
-bootstrap/*.before-*
-moveable/
+Angel can understand a request
+but the system still needs a stronger,
+general Understand → Plan → Route → Execute
+→ Evidence → Verify → Recover lifecycle.
 ```
 
-Do not blindly delete or stage these.
+## v1.2 Target
 
-## Current Development Direction
+Rusty becomes the operational brain while retaining a clean six-function mental model:
 
-Genesis 1.0 is protected.
+```text
+UNDERSTAND
+PLAN
+ROUTE
+EXECUTE
+VERIFY
+RECOVER
+```
 
-The next milestone is:
+Inside those functions, Rusty will use professional concepts such as:
 
-**Current Information & WeatherBrain Integration**
+- intent/context
+- capability discovery
+- structured execution
+- evidence
+- verification
+- bounded planning
+- recovery
 
-Do not modify the `v1.0.0` tag.
+## First Reference Capability
+
+`current_datetime`
+
+The goal is not merely to make the clock work.
+
+The goal is to prove the reusable architecture:
+
+```text
+Angel
+→ Rusty
+→ capability
+→ real system
+→ evidence
+→ verification
+→ model reasoning
+→ Angel
+```
+
+## WeatherBrain
+
+WeatherBrain remains a dedicated subsystem.
+
+The weather runtime path remains an investigation until registration, dispatch, backend access, and model routing are verified.
+
+Do not permanently substitute generic `search_web()` for WeatherBrain.
+
+## Next Responsible Action
+
+Finish the combined v1.2 architecture contract, then implement the first reusable capability boundary with `current_datetime` as the reference path.

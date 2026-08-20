@@ -1,12 +1,16 @@
 # Angel AI — Contributor Quick Start
 
-Welcome to Angel AI.
+## Current Mission
 
-This guide is for a developer or AI assistant joining the project.
+Angel is currently being developed in the **Genesis v1.1 line**.
+
+The team is preparing the transition to **Genesis v1.2 — Trustworthy Agent Brain**.
+
+The goal is not to rewrite Angel. The goal is to strengthen the existing system with a professional brain architecture while preserving working behavior.
 
 ## Before Coding
 
-Read these files in order:
+Read, in order:
 
 ```text
 Rusty/RustyReadme.md
@@ -16,9 +20,33 @@ Rusty/NEXT-BUILD.md
 Rusty/CONTRIBUTOR-TEAM.md
 ```
 
-Then inspect the actual repository.
+Then inspect the actual repository and Git state.
 
-## Confirm Git State
+## v1.1 → v1.2 Rule
+
+We are **building on v1.1**, not pretending v1.1 does not exist.
+
+Preserve:
+
+- working Python behavior
+- existing tests
+- current knowledge systems
+- existing capability implementations
+- recovery material
+- project identity and branding
+
+## Git Safety
+
+Historical Genesis 1.0 remains protected:
+
+```text
+v1.0.0
+8b06235
+```
+
+Do not assume that tag is the current working state.
+
+Before significant work:
 
 ```powershell
 git status --short
@@ -26,73 +54,86 @@ git branch --show-current
 git log --oneline --decorate -5
 ```
 
-Current protected release:
+Do not reset, clean, force-push, rewrite history, or delete recovery material.
 
-```text
-v1.0.0
-8b06235
-```
+## Baseline Tests
 
-## Run Baseline Tests
+Use the project's virtual environment:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest .\tests -q
+.\.venv\Scripts\python.exe -m pytest .	ests -q
 ```
 
-Genesis baseline:
+The verified Genesis 1.0 baseline was:
 
 ```text
 85 passed in 12.42s
 ```
 
-## Before Taking a Task
+That is historical evidence. Always run the current suite before declaring a v1.1 or v1.2 milestone.
 
-Check `Rusty/CONTRIBUTOR-TEAM.md`.
+## v1.2 Architecture
 
-If the task is already `ACTIVE`, do not duplicate it.
+Remember the six Rusty functions:
 
-Claim an available task with:
+```text
+Understand
+Plan
+Route
+Execute
+Verify
+Recover
+```
 
-- task ID
-- owner
-- branch
-- intended files
-- goal
+The professional implementation underneath them includes:
+
+- intent/context
+- capability discovery
+- planning
+- routing
+- structured execution
+- evidence
+- verification
+- recovery
+
+## First Reference Capability
+
+`current_datetime` is the reference capability.
+
+It should prove:
+
+```text
+request
+→ Understand
+→ Plan
+→ Route
+→ Execute
+→ Evidence
+→ Verify
+→ Response
+```
+
+The model must not invent the live time.
 
 ## AI Assistants
 
 Tell your AI:
 
-> Read the Rusty folder first. Inspect the repository before changing anything. Check the contributor board. Do not duplicate active work. Preserve working systems. Make the smallest responsible change. Run relevant tests. Report exactly what was changed and tested.
-
-## Testing
-
-When possible, record:
-
-- OS version
-- runtime versions
-- hardware
-- drive layout
-- network state
-- dependencies
-- exact result
-
-Different computers are valuable test environments.
+> You are contributing to Angel AI during the v1.1 → v1.2 transition. Read the Rusty continuity documents first. Inspect the actual repository and Git status. Preserve working systems and uncommitted work. Use the six-function Rusty Brain architecture as the top-level design. Do not duplicate active work. Make the smallest responsible change. Never invent tools, tests, commits, builds, or runtime results. Run relevant tests and report exactly what changed and what remains unknown.
 
 ## Finish Properly
 
-Before declaring a task done:
+Before declaring a task complete:
 
 ```text
-Tests pass
-Changes reviewed
+Implementation reviewed
+Relevant tests pass
+Runtime behavior verified when applicable
 Commit verified
 Task board updated
 Known limitations recorded
 ```
 
-Do not claim success without evidence.
-
 ## Core Principle
 
-> One project. Shared knowledge. No duplicated work. More real-world testing.
+> Protect what works. Inspect before changing. Build in modules. Preserve evidence. Carry the knowledge forward.

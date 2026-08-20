@@ -2,7 +2,7 @@
 
 Updated team-facing documentation for the transition from Genesis v1.1 to Genesis v1.2.
 
-## Canonical architecture direction
+## Canonical architecture change
 
 The documentation now uses the combined Rusty Brain:
 
@@ -17,17 +17,22 @@ Recover
 
 The detailed professional concepts remain underneath those six functions rather than replacing them.
 
-## Files added
+## Files updated
 
+- ARCHITECTURE.md
+- CONTRIBUTOR-QUICKSTART.md
+- CONTRIBUTOR-TEAM.md
+- CURRENT-STATE.md
+- DECISIONS.md
+- GIT-CHECKPOINTS.md
+- HANDOFF.md
+- KNOWN-ISSUES.md
+- NEXT-BUILD.md
+- RECOVERY.md
+- RustyReadme.md
+- TEST-BASELINE.md
+- TEST-MATRIX.md
 - README.md
-- Safety-Growth-Genesis-v1.1-to-v1.2.md
-- UPDATE-MANIFEST.md
-
-## Existing documentation preserved
-
-The existing Rusty continuity and team documentation was intentionally preserved.
-
-The previously committed Rusty documents remain unchanged in this checkpoint and continue to provide historical, operational, recovery, testing, and contributor context.
 
 ## Important version rule
 

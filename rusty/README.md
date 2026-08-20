@@ -1,4 +1,4 @@
-﻿# ðŸª½ Angel AI â€” Genesis v1.1 â†’ v1.2
+# 🪽 Angel AI — Genesis v1.1 → v1.2
 
 > **A trustworthy local-first AI assistant that is becoming a trustworthy engineering agent.**
 
@@ -8,7 +8,7 @@ Angel is currently in the Genesis v1.1 development line. Genesis v1.2 is the nex
 
 ---
 
-## ðŸš€ Current Direction
+## 🚀 Current Direction
 
 Angel is moving from:
 
@@ -28,99 +28,99 @@ The central idea is simple:
 
 ---
 
-# ðŸ§  Genesis v1.1 â†’ v1.2 Architecture
+# 🧠 Genesis v1.1 → v1.2 Architecture
 
 ```text
-                         ðŸª½ ANGEL
+                         🪽 ANGEL
                   Identity / Personality
-                           â”‚
-                           â–¼
-                  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                  â”‚   RUSTY BRAIN   â”‚
-                  â”‚                 â”‚
-                  â”‚  Understand     â”‚
-                  â”‚  Plan           â”‚
-                  â”‚  Route          â”‚
-                  â”‚  Execute        â”‚
-                  â”‚  Verify         â”‚
-                  â”‚  Recover        â”‚
-                  â””â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                           â”‚
-          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-          â–¼                â–¼                â–¼
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │   RUSTY BRAIN   │
+                  │                 │
+                  │  Understand     │
+                  │  Plan           │
+                  │  Route          │
+                  │  Execute        │
+                  │  Verify         │
+                  │  Recover        │
+                  └────────┬────────┘
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
      Ollama/Llama      Capabilities       Knowledge
        Reasoning         / Tools           / Memory
-          â”‚                â”‚                â”‚
-          â”‚          â”Œâ”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”      â”‚
-          â”‚          â–¼     â–¼     â–¼    â–¼      â”‚
-          â”‚        Time   FS   Web  System   â”‚
-          â”‚                                  â”‚
-          â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–º EVIDENCE â—„â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                            â”‚
-                            â–¼
+          │                │                │
+          │          ┌─────┼─────────┐      │
+          │          ▼     ▼     ▼    ▼      │
+          │        Time   FS   Web  System   │
+          │                                  │
+          └──────────────► EVIDENCE ◄────────┘
+                            │
+                            ▼
                        VERIFICATION
-                            â”‚
-                 â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                 â–¼                     â–¼
+                            │
+                 ┌──────────┴──────────┐
+                 ▼                     ▼
              VERIFIED               FAILED
-                 â”‚                     â”‚
-                 â–¼                     â–¼
+                 │                     │
+                 ▼                     ▼
              RESPONSE               RECOVER
-                 â”‚                     â”‚
-                 â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-                            â–¼
-                       ðŸª½ ANGEL ANSWER
+                 │                     │
+                 └──────────┬──────────┘
+                            ▼
+                       🪽 ANGEL ANSWER
 ```
 
-### Rusty Brain â€” professional internal model
+### Rusty Brain — professional internal model
 
 The six visible Rusty functions are the product-level architecture. The following concepts live inside those functions:
 
 ```text
 UNDERSTAND
-â”œâ”€â”€ intent
-â”œâ”€â”€ context
-â”œâ”€â”€ goal
-â””â”€â”€ constraints
+├── intent
+├── context
+├── goal
+└── constraints
 
 PLAN
-â”œâ”€â”€ required capabilities
-â”œâ”€â”€ action sequence
-â”œâ”€â”€ approval requirements
-â””â”€â”€ stop conditions
+├── required capabilities
+├── action sequence
+├── approval requirements
+└── stop conditions
 
 ROUTE
-â”œâ”€â”€ capability discovery
-â”œâ”€â”€ tool selection
-â”œâ”€â”€ model routing
-â””â”€â”€ permission/risk routing
+├── capability discovery
+├── tool selection
+├── model routing
+└── permission/risk routing
 
 EXECUTE
-â”œâ”€â”€ capability invocation
-â”œâ”€â”€ tool execution
-â”œâ”€â”€ result collection
-â””â”€â”€ error boundaries
+├── capability invocation
+├── tool execution
+├── result collection
+└── error boundaries
 
 VERIFY
-â”œâ”€â”€ result validation
-â”œâ”€â”€ evidence
-â”œâ”€â”€ freshness
-â”œâ”€â”€ provenance
-â””â”€â”€ expected vs actual
+├── result validation
+├── evidence
+├── freshness
+├── provenance
+└── expected vs actual
 
 RECOVER
-â”œâ”€â”€ retry
-â”œâ”€â”€ safe stop
-â”œâ”€â”€ error explanation
-â”œâ”€â”€ rollback where appropriate
-â””â”€â”€ preserve evidence
+├── retry
+├── safe stop
+├── error explanation
+├── rollback where appropriate
+└── preserve evidence
 ```
 
 This is a combined architecture: the six Rusty functions remain the simple, memorable design; the internal contracts make the implementation professional, testable, and extensible.
 
 ## Responsibility Split
 
-### ðŸª½ Angel
+### 🪽 Angel
 
 Angel owns:
 
@@ -131,7 +131,7 @@ Angel owns:
 
 Angel should never invent live tool results.
 
-### ðŸ¦€ Rusty
+### 🦀 Rusty
 
 Rusty is the trusted Rust backend and execution engine.
 
@@ -146,7 +146,7 @@ Genesis v1.2 expands Rusty toward the orchestration/brain layer responsible for:
 - verification
 - recovery
 
-### ðŸ§  Ollama / Local LLM
+### 🧠 Ollama / Local LLM
 
 The local model provides:
 
@@ -157,7 +157,7 @@ The local model provides:
 
 The model is **not** the source of truth for live system state.
 
-### ðŸ› ï¸ Capabilities
+### 🛠️ Capabilities
 
 Capabilities are the real operations Angel can perform.
 
@@ -187,7 +187,7 @@ execution method
 verification method
 ```
 
-### ðŸ“š Knowledge
+### 📚 Knowledge
 
 Knowledge contains durable information such as:
 
@@ -199,7 +199,7 @@ Knowledge contains durable information such as:
 
 Knowledge is not automatically live evidence.
 
-### ðŸ”Ž Evidence
+### 🔎 Evidence
 
 Evidence represents what the system actually observed during execution.
 
@@ -213,7 +213,7 @@ Evidence:
 
 Those are different things.
 
-### ðŸ›¡ï¸ Verification
+### 🛡️ Verification
 
 Rusty should verify capability results before treating them as trusted live evidence.
 
@@ -221,27 +221,27 @@ The intended lifecycle is:
 
 ```text
 Request
-  â†“
+  ↓
 Intent
-  â†“
+  ↓
 Capability discovery
-  â†“
+  ↓
 Plan
-  â†“
+  ↓
 Execute
-  â†“
+  ↓
 Observe
-  â†“
+  ↓
 Verify
-  â†“
+  ↓
 Reason
-  â†“
+  ↓
 Respond
 ```
 
 ---
 
-# ðŸŽ¯ Genesis v1.1 â†’ v1.2 Mission
+# 🎯 Genesis v1.1 → v1.2 Mission
 
 The Genesis v1.2 build proceeds incrementally from the working v1.1 foundation.
 
@@ -250,31 +250,31 @@ The Genesis v1.2 build proceeds incrementally from the working v1.1 foundation.
 ```text
 G12-ARCH
 Architecture contract
-        â†“
+        ↓
 G12-CAP
 Capability contract
-        â†“
+        ↓
 G12-TIME
 Current datetime reference capability
-        â†“
+        ↓
 G12-EVID
 Evidence / verification
-        â†“
+        ↓
 G12-BRIDGE
-Angel â†” Rusty integration
-        â†“
+Angel ↔ Rusty integration
+        ↓
 G12-PLAN
 Planner
-        â†“
+        ↓
 G12-TOOLS
 Additional capabilities
-        â†“
+        ↓
 G12-MEM
 Memory separation
-        â†“
+        ↓
 G12-AGENT
 Engineering-agent workflows
-        â†“
+        ↓
 G12-EXE
 Genesis v1.2 executable candidate
 ```
@@ -283,7 +283,7 @@ Each meaningful milestone should receive a verified local Git checkpoint.
 
 ---
 
-# â° First Reference Capability
+# ⏰ First Reference Capability
 
 The first capability is:
 
@@ -303,23 +303,23 @@ the system should perform:
 
 ```text
 Angel
- â†“
+ ↓
 Rusty
- â†“
+ ↓
 Intent: CURRENT_TIME
- â†“
+ ↓
 Capability: current_datetime
- â†“
+ ↓
 Real system clock
- â†“
+ ↓
 Structured result
- â†“
+ ↓
 Evidence
- â†“
+ ↓
 Verification
- â†“
+ ↓
 Ollama
- â†“
+ ↓
 Angel response
 ```
 
@@ -329,7 +329,7 @@ The model does not need to know the time.
 
 ---
 
-# ðŸŒ¦ï¸ WeatherBrain
+# 🌦️ WeatherBrain
 
 Weather remains a dedicated capability.
 
@@ -341,25 +341,25 @@ Do not assume a component is broken until the actual path has been traced:
 
 ```text
 request
- â†“
+ ↓
 brain
- â†“
+ ↓
 capability selection
- â†“
+ ↓
 registry / allowlist
- â†“
+ ↓
 WeatherBrain
- â†“
+ ↓
 backend
- â†“
+ ↓
 result
- â†“
+ ↓
 verification
 ```
 
 ---
 
-# ðŸ§© Migration Strategy
+# 🧩 Migration Strategy
 
 Genesis v1.2 is **not a rewrite**.
 
@@ -369,17 +369,17 @@ The migration strategy is:
 
 ```text
 Existing component
-       â†“
+       ↓
 Inspect responsibility
-       â†“
+       ↓
 Define Rusty boundary
-       â†“
+       ↓
 Implement Rusty service
-       â†“
+       ↓
 Integrate
-       â†“
+       ↓
 Test
-       â†“
+       ↓
 Preserve compatibility
 ```
 
@@ -387,7 +387,7 @@ Do not delete working Python simply because Rusty is expanding.
 
 ---
 
-# ðŸ›¡ï¸ Engineering Safety
+# 🛡️ Engineering Safety
 
 Angel is intended to protect working systems.
 
@@ -436,7 +436,7 @@ Administrative actions should use:
 
 ---
 
-# ðŸ§ª Testing
+# 🧪 Testing
 
 Use the project's virtual environment:
 
@@ -460,7 +460,7 @@ For important capabilities, test the actual runtime path as well.
 
 ---
 
-# ðŸ—‚ï¸ Project Continuity Documents
+# 🗂️ Project Continuity Documents
 
 The `Rusty/` continuity material is part of the engineering system.
 
@@ -468,19 +468,19 @@ Important documents include:
 
 ```text
 Rusty/
-â”œâ”€â”€ RustyReadme.md
-â”œâ”€â”€ ARCHITECTURE.md
-â”œâ”€â”€ CURRENT-STATE.md
-â”œâ”€â”€ DECISIONS.md
-â”œâ”€â”€ GIT-CHECKPOINTS.md
-â”œâ”€â”€ HANDOFF.md
-â”œâ”€â”€ KNOWN-ISSUES.md
-â”œâ”€â”€ NEXT-BUILD.md
-â”œâ”€â”€ RECOVERY.md
-â”œâ”€â”€ TEST-BASELINE.md
-â”œâ”€â”€ TEST-MATRIX.md
-â”œâ”€â”€ CONTRIBUTOR-QUICKSTART.md
-â””â”€â”€ CONTRIBUTOR-TEAM.md
+├── RustyReadme.md
+├── ARCHITECTURE.md
+├── CURRENT-STATE.md
+├── DECISIONS.md
+├── GIT-CHECKPOINTS.md
+├── HANDOFF.md
+├── KNOWN-ISSUES.md
+├── NEXT-BUILD.md
+├── RECOVERY.md
+├── TEST-BASELINE.md
+├── TEST-MATRIX.md
+├── CONTRIBUTOR-QUICKSTART.md
+└── CONTRIBUTOR-TEAM.md
 ```
 
 Read these before beginning significant work.
@@ -489,29 +489,29 @@ The repository remains the source of truth.
 
 ---
 
-# ðŸ‘¥ Team Workflow
+# 👥 Team Workflow
 
 Before starting a task:
 
 ```text
 Read continuity documents
-        â†“
+        ↓
 Inspect repository
-        â†“
+        ↓
 Check Git status
-        â†“
+        ↓
 Check contributor board
-        â†“
+        ↓
 Claim task
-        â†“
+        ↓
 Make smallest responsible change
-        â†“
+        ↓
 Run tests
-        â†“
+        ↓
 Review evidence
-        â†“
+        ↓
 Commit
-        â†“
+        ↓
 Update documentation
 ```
 
@@ -521,7 +521,7 @@ If a task is marked `ACTIVE`, coordinate before changing the same subsystem.
 
 ---
 
-# ðŸ§  Engineering-Agent Goal
+# 🧠 Engineering-Agent Goal
 
 Eventually Angel should be able to handle workflows such as:
 
@@ -551,7 +551,7 @@ Not merely a bigger model.
 
 ---
 
-# ðŸ’¾ Recovery
+# 💾 Recovery
 
 Genesis development must remain recoverable.
 
@@ -579,7 +579,7 @@ Recovery means preserving:
 
 ---
 
-# ðŸ“Œ Historical Foundation
+# 📌 Historical Foundation
 
 Genesis 1.0 established the protected foundation:
 
@@ -594,7 +594,7 @@ Genesis v1.2 moves forward through new development checkpoints.
 
 ---
 
-# ðŸ¤ For AI Contributors
+# 🤝 For AI Contributors
 
 Use this startup instruction:
 
@@ -602,7 +602,7 @@ Use this startup instruction:
 
 ---
 
-# ðŸ§  The Combined Rusty Brain
+# 🧠 The Combined Rusty Brain
 
 The team-facing model is intentionally simple:
 
@@ -615,11 +615,11 @@ Verify
 Recover
 ```
 
-Professional engineering conceptsâ€”intent, capability discovery, evidence, provenance, validation, bounded planning, and recoveryâ€”live underneath those six functions.
+Professional engineering concepts—intent, capability discovery, evidence, provenance, validation, bounded planning, and recovery—live underneath those six functions.
 
 This keeps Angel's architecture understandable while giving Rusty the machinery needed to scale.
 
-# ðŸŒ± The Genesis v1.2 Principle
+# 🌱 The Genesis v1.2 Principle
 
 Angel does not need to pretend she is smart.
 
@@ -655,8 +655,8 @@ Planner
 
 > **Build Angel into a trustworthy engineering agent that can understand, plan, act, verify, recover, and tell the truth about what she actually did.**
 
-**Protect what works.
-Inspect before changing.
-Build in modules.
-Preserve the truth.
-Carry the knowledge forward.** ðŸª½
+**Protect what works.  
+Inspect before changing.  
+Build in modules.  
+Preserve the truth.  
+Carry the knowledge forward.** 🪽

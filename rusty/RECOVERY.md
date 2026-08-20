@@ -1,80 +1,77 @@
 # Angel AI — Recovery Guide
 
-## Primary Git Recovery Point
-
-Genesis 1.0:
+## Current Version Position
 
 ```text
+Current development: Genesis v1.1
+Target: Genesis v1.2
+```
+
+## Protected Historical Recovery Point
+
+```text
+Genesis 1.0
 v1.0.0
 8b06235
 ```
 
-This is the protected GitHub release checkpoint.
+## Verified Backup
 
-## Backup Recovery
-
-Verified local backup:
+Known verified local backup:
 
 ```text
 D:\Angel_Backups\Angel_Backup_2026-08-19_150550
 ```
 
-A removable USB backup was also successfully verified.
+A removable USB backup was also verified during Genesis 1.0 work.
 
-## Verification
+## Before Recovery
 
-Run the verifier from the Angel project:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\bootstrap\Verify-Angel-Backup.ps1
-```
-
-Choose:
-
-```text
-1. Browse for a folder
-```
-
-or:
-
-```text
-2. Enter a path manually
-```
-
-The verifier discovers:
-
-```text
-Angel_Backup_*
-```
-
-inside the selected parent folder.
-
-## Backup Safety
+1. Inspect Git status.
+2. Identify uncommitted work.
+3. Preserve current recovery copies.
+4. Confirm the intended recovery source.
+5. Verify the recovered result.
 
 Do not restore over working code blindly.
 
-Before recovery:
-
-1. Inspect current Git status.
-2. Identify uncommitted work.
-3. Preserve current recovery copies.
-4. Confirm the backup being restored.
-5. Verify the restored result.
-
-## Git Recovery
-
-Inspect:
+## Git Inspection
 
 ```powershell
 git status --short
+git branch --show-current
 git log --oneline --decorate -10
 git tag -n
 ```
 
-Do not use destructive reset/clean commands without an explicit recovery plan.
+Do not use destructive reset/clean operations without an explicit recovery plan.
 
-## Principle
+## Genesis v1.2 Recovery Principle
 
-Recovery is not only restoring files.
+Rusty development must remain reversible.
 
-Recovery means preserving evidence, working code, configuration, decisions, and the ability to continue safely.
+Each major milestone should have:
+
+- a local Git checkpoint
+- relevant tests
+- documented changes
+- preserved recovery material when needed
+
+## Capability Recovery
+
+If a new capability fails:
+
+```text
+stop
+→ preserve evidence
+→ identify boundary
+→ disable/restore only the affected component
+→ rerun targeted tests
+→ resume
+```
+
+Do not roll back the whole project for an isolated capability defect unless evidence requires it.
+
+## Core Principle
+
+Recovery means preserving the ability to continue, not merely restoring files.

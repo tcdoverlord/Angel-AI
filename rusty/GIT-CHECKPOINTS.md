@@ -1,52 +1,28 @@
 # Angel AI — Git Checkpoints
 
-## Genesis 1.0
-
-### Commit
+## Current Version Position
 
 ```text
-8b06235
-Genesis 1.0: WeatherBrain and recovery bootstrap
+Current development: Genesis v1.1
+Target: Genesis v1.2
 ```
 
-### Tag
+## Protected Genesis 1.0
 
 ```text
-v1.0.0
-Angel AI Genesis 1.0
+Commit: 8b06235
+Tag: v1.0.0
 ```
 
-The tag was verified to point to:
+The tag is historical and protected.
 
-```text
-8b062354b8c96768f55eb0932ed8c99a603adead
-```
+Do not rewrite or move it.
 
-### GitHub
+## Current Development
 
-`main` was pushed successfully.
+Genesis v1.2 proceeds from the actual v1.1 repository state.
 
-`v1.0.0` was pushed successfully.
-
-Verified state:
-
-```text
-8b06235 (HEAD -> main, tag: v1.0.0, origin/main)
-```
-
-## Safety
-
-Do not rewrite Genesis history.
-
-Do not force-push.
-
-Do not modify the `v1.0.0` tag.
-
-Future changes should be new commits on `main`.
-
-## Before Significant Changes
-
-Run:
+Before significant changes:
 
 ```powershell
 git status --short
@@ -54,7 +30,7 @@ git branch --show-current
 git log --oneline --decorate -5
 ```
 
-Then inspect the affected files.
+Preserve uncommitted work.
 
 ## Checkpoint Pattern
 
@@ -65,6 +41,47 @@ Implement
 Validate
 Commit
 Verify
+Document
 ```
 
-Keep unrelated changes out of commits.
+## Genesis v1.2 Checkpoint Targets
+
+```text
+G12-ARCH   Combined architecture contract
+G12-CAP    Capability contract
+G12-TIME   Current datetime reference capability
+G12-EVID   Evidence / verification
+G12-BRIDGE Angel ↔ Rusty integration
+G12-PLAN   Planner
+G12-TOOLS  Additional capabilities
+G12-MEM    Memory separation
+G12-AGENT  Engineering-agent workflows
+G12-EXE    Genesis v1.2 executable candidate
+```
+
+Actual commit hashes must be recorded only after commits exist.
+
+## Commit Rules
+
+Keep unrelated changes out of a checkpoint.
+
+Do not:
+
+- force-push
+- reset destructively
+- clean untracked recovery material
+- rewrite shared history
+- move the v1.0.0 tag
+
+## Release Rule
+
+A release is not established by documentation alone.
+
+Require:
+
+- verified commit
+- verified tag
+- relevant tests
+- runtime evidence
+- build evidence
+- documented limitations

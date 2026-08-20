@@ -1,8 +1,6 @@
-# Angel AI — Cross-Machine Test Matrix
+# Angel AI — Genesis v1.1 → v1.2 Test Matrix
 
-This file is the durable compatibility test log.
-
-Use it to record results from different computers rather than relying on memory or chat history.
+This file records durable validation evidence across machines and milestones.
 
 ## Environment Profiles
 
@@ -11,25 +9,33 @@ Use it to record results from different computers rather than relying on memory 
 | MACHINE-001 | — | — | — | — | — | — | — |
 | MACHINE-002 | — | — | — | — | — | — | — |
 
-## Test Matrix
+## Transition Test Matrix
 
-| Test ID | Test | Profile | Result | Date | Evidence / Notes |
-|---|---|---|---|---|---|
-| TEST-001 | Bootstrap | — | — | — | |
-| TEST-002 | Python suite | — | — | — | |
-| TEST-003 | Date/time | — | — | — | |
-| TEST-004 | WeatherBrain | — | — | — | |
-| TEST-005 | Weather failure handling | — | — | — | |
-| TEST-006 | Backup picker | — | — | — | |
-| TEST-007 | USB backup | — | — | — | |
-| TEST-008 | Backup capacity | — | — | — | |
-| TEST-009 | Backup verifier | — | — | — | |
-| TEST-010 | Restore | — | — | — | |
-| TEST-011 | Rust backend | — | — | — | |
+| Test ID | Area | Profile | Result | Evidence / Notes |
+|---|---|---|---|---|
+| G12-001 | Current v1.1 baseline | — | — | |
+| G12-002 | Understand / intent | — | — | |
+| G12-003 | Capability contract | — | — | |
+| G12-004 | Capability registration | — | — | |
+| G12-005 | Capability routing | — | — | |
+| G12-006 | Current datetime execution | — | — | |
+| G12-007 | Evidence generation | — | — | |
+| G12-008 | Evidence verification | — | — | |
+| G12-009 | Angel ↔ Rusty bridge | — | — | |
+| G12-010 | Planner single-step | — | — | |
+| G12-011 | Planner multi-step | — | — | |
+| G12-012 | Filesystem capability | — | — | |
+| G12-013 | System information | — | — | |
+| G12-014 | Process inspection | — | — | |
+| G12-015 | Git capability | — | — | |
+| G12-016 | PowerShell capability | — | — | |
+| G12-017 | WeatherBrain integration | — | — | |
+| G12-018 | Failure honesty | — | — | |
+| G12-019 | Recovery behavior | — | — | |
+| G12-020 | Cross-machine runtime | — | — | |
+| G12-021 | EXE candidate | — | — | |
 
 ## Environment Record
-
-### MACHINE-###
 
 ```text
 Contributor:
@@ -47,9 +53,6 @@ RAM:
 GPU:
 
 Project drive:
-Backup drive:
-USB/removable drive:
-
 Ollama/runtime:
 Network:
 
@@ -68,11 +71,11 @@ Expected:
 
 Actual:
 
-Result: PASS / FAIL / BLOCKED
+Result: PASS / FAIL / BLOCKED / NOT CHECKED
 
 Evidence:
 
-Notes:
+Known limitations:
 
 Follow-up:
 ```
@@ -80,11 +83,10 @@ Follow-up:
 ## Interpretation Rules
 
 - PASS means the test actually passed.
-- FAIL means the expected behavior did not occur.
-- BLOCKED means the test could not be completed.
-- Unknown must not be converted into PASS.
-- Environment-specific behavior should remain documented.
-- Repeated failures across machines may indicate a product issue.
-- A failure on one machine may indicate compatibility or environment differences.
-
-Never fabricate a result to fill an empty row.
+- FAIL means expected behavior did not occur.
+- BLOCKED means it could not be completed.
+- NOT CHECKED means no evidence exists yet.
+- Unknown must never become PASS.
+- Unit tests do not automatically prove live runtime behavior.
+- A model response does not prove that a capability executed.
+- Cross-machine failures are compatibility evidence and must be recorded.
