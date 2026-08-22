@@ -388,6 +388,21 @@ class AngelBrain:
         if date_time_request:
             return ToolRequest("current_datetime", {})
 
+        factual_definition_request = re.search(
+            r"^(?:what is|what are|who is|who was|what was|define|explain)\s+"
+            r".+?[?!.]?$",
+            lowered,
+        )
+        if (
+            factual_definition_request
+            and "wikipedia_search" in self.tools.names
+            and connectivity_mode != "Offline"
+            and self.settings.get().internet_search_enabled
+        ):
+            return ToolRequest(
+                "wikipedia_search",
+                {"query": text, "limit": 3},
+            )
         if re.search(
             r"\b(where did we leave off|continue (?:the )?(?:project|what we were building)|"
             r"what remains unfinished|project status)\b",
