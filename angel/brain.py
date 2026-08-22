@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 import re
@@ -106,6 +106,22 @@ class AngelBrain:
             result = loop.execute(planned)
             preflight_results.append(result)
             self._merge_sources(sources, result)
+
+            # These capabilities are deterministic preflight operations.
+            # Angel already executed the verified capability, so do not hand
+            # the result back to the local model for another tool-selection
+            # decision. Return the verified result directly.
+            if planned.name in {"current_weather", "current_datetime"}:
+                return self._finish(
+                    conversation_id,
+                    result.content,
+                    sources,
+                    loop.calls,
+                    True,
+                    mode,
+                    cancel_event,
+                )
+
             if planned.name == "search_bible" and result.success:
                 # Bible material is authoritative internal context, not an automatic
                 # user-facing response. Continue through the normal model-response path
@@ -116,15 +132,19 @@ class AngelBrain:
                     conversation_id,
                 )
 
+        if mode:
+            extra_system = (
+                "This is an Angel quick action. Give a concrete, non-repetitive recommendation."
+            )
+        else:
+            extra_system = ""
+
         messages = self.context.build(
             conversation_id,
             effective_text,
             tool_results=preflight_results,
-            extra_system=(
-                "This is an Angel quick action. Give a concrete, non-repetitive recommendation."
-                if mode
-                else ""
-            ),
+            extra_system=extra_system,
+            tool_definitions=self.tools.definitions,
         )
         self._status(status_callback, "ThinkingÃ¢â‚¬Â¦")
 
@@ -155,12 +175,54 @@ class AngelBrain:
                     )
                 request_key = request.name + ":" + repr(sorted(request.arguments.items()))
                 if request_key in seen_tool_requests:
+                    self._status(
+                        status_callback,
+                        "Finalizing from the completed tool result",
+                    )
+
+                    messages.append(
+                        {
+                            "role": "system",
+                            "content": (
+                                "The requested capability has already executed and its result is "
+                                "already present in the conversation. Do NOT call that capability "
+                                "again. Use the completed result to answer the user's original "
+                                "question naturally and directly. Do not expose internal tool JSON, "
+                                "tool names, arguments, or loop diagnostics. Produce the final "
+                                "answer now."
+                            ),
+                        }
+                    )
+
+                    final_response = self.ollama.chat(
+                        current.ollama_url,
+                        current.model,
+                        messages,
+                    )
+
+                    if parse_tool_request(final_response) is None:
+                        return self._finish(
+                            conversation_id,
+                            self._clean_response(final_response),
+                            sources,
+                            loop.calls,
+                            True,
+                            mode,
+                            cancel_event,
+                        )
+
                     final = (
-                        "I stopped because the local model repeated the same tool request. "
-                        "I won't keep looping or pretend the task completed."
+                        "I couldn't safely finalize the completed tool result because "
+                        "the local model continued requesting the same capability."
                     )
                     return self._finish(
-                        conversation_id, final, sources, loop.calls, True, mode, cancel_event
+                        conversation_id,
+                        final,
+                        sources,
+                        loop.calls,
+                        True,
+                        mode,
+                        cancel_event,
                     )
                 seen_tool_requests.add(request_key)
                 self._status(status_callback, f"Using {request.name.replace('_', ' ')}Ã¢â‚¬Â¦")
@@ -180,8 +242,26 @@ class AngelBrain:
                     return self._finish(conversation_id, final, sources, loop.calls, True, mode, cancel_event)
                 self._merge_sources(sources, result)
                 messages = self.context.append_tool_exchange(messages, raw_response, result)
-                self._status(status_callback, "Thinking with the tool resultÃ¢â‚¬Â¦")
-                raw_response = self.ollama.chat(current.ollama_url, current.model, messages)
+
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": (
+                            "A capability has just completed. Its result is now available in the "
+                            "conversation. Use that result to answer the user's original request. "
+                            "Do not repeat the same capability request merely to obtain the same "
+                            "information again. Do not expose internal tool-call JSON. If the "
+                            "result is sufficient, produce the final natural-language answer now."
+                        ),
+                    }
+                )
+
+                self._status(status_callback, "Thinking with the tool result")
+                raw_response = self.ollama.chat(
+                    current.ollama_url,
+                    current.model,
+                    messages,
+                )
         except OllamaError as exc:
             self.logger.info("Local AI unavailable during response: %s", exc)
             final = self._offline_fallback(preflight_results, sources)

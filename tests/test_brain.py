@@ -70,8 +70,8 @@ def test_brain_plans_combined_date_and_time_request(services):
     response = brain.respond("What time and date is it?", conversation_id)
 
     assert response.tool_calls == 1
-    assert "Local date:" in ollama.messages[0][0]["content"]
-    assert "Local time:" in ollama.messages[0][0]["content"]
+    assert "Local date:" in response.content
+    assert "Local time:" in response.content
 
 def test_brain_enforces_three_tool_calls(services):
     database, _settings, _memory = services
@@ -83,7 +83,7 @@ def test_brain_enforces_three_tool_calls(services):
     response = brain.respond("Use tools if necessary", conversation_id)
 
     assert response.tool_calls == 1
-    assert "repeated the same tool request" in response.content
+    assert "continued requesting the same capability" in response.content
 
 
 def test_brain_rejects_malformed_model_tool_output(services):

@@ -87,32 +87,35 @@ Inside those functions, Rusty will use professional concepts such as:
 - bounded planning
 - recovery
 
-## First Reference Capability
+## Live Current-Information Capabilities
 
-`current_datetime`
+`current_datetime` remains the reference capability and now has a dedicated routing path.
 
-The goal is not merely to make the clock work.
+`current_weather` is now a dedicated live capability backed by Open-Meteo geocoding and current conditions. Weather/date-time requests no longer fall back to generic `search_web()`.
 
-The goal is to prove the reusable architecture:
+The reusable path is:
 
 ```text
 Angel
-→ Rusty
+→ WeatherBrain
 → capability
 → real system
-→ evidence
-→ verification
+→ structured evidence
 → model reasoning
 → Angel
 ```
 
+The current-weather capability resolves an explicit location when supplied, otherwise it uses Angel's configured city/region. If live weather is unavailable, Angel does not fabricate conditions.
+
 ## WeatherBrain
 
-WeatherBrain remains a dedicated subsystem.
+WeatherBrain is now a dedicated routing layer for current date/time and weather requests.
 
-The weather runtime path remains an investigation until registration, dispatch, backend access, and model routing are verified.
-
-Do not permanently substitute generic `search_web()` for WeatherBrain.
+- Date/time routes to `current_datetime`.
+- Weather routes to `current_weather`.
+- Combined weather/date/time routes to `current_weather`, whose verified live snapshot also carries the local date/time.
+- Offline combined requests retain the verified `current_datetime` path instead of attempting a network request.
+- Generic `search_web()` is no longer the weather execution path.
 
 ## Next Responsible Action
 

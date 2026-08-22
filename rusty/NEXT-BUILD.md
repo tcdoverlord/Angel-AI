@@ -61,6 +61,8 @@ verify
 
 Use `current_datetime` as the reference implementation.
 
+The live date/time path is already registered and routed by the current WeatherBrain layer.
+
 Required flow:
 
 ```text
@@ -71,12 +73,32 @@ request
 → Execute
 → structured result
 → Evidence
-→ Verify
 → model
 → response
 ```
 
 The model must not be the source of the live time.
+
+## Step 3a — Current Weather
+
+Use `current_weather` as the dedicated live weather capability.
+
+Required behavior:
+
+```text
+weather request
+→ WeatherBrain
+→ current_weather
+→ Open-Meteo geocoding
+→ Open-Meteo current conditions
+→ structured live evidence
+→ model
+→ response
+```
+
+Do not route weather through generic `search_web()`.
+
+If the user supplies a location, use it. Otherwise use Angel's configured city/region. If no location is available, report that clearly rather than guessing.
 
 ## Step 4 — Evidence / Verification
 
