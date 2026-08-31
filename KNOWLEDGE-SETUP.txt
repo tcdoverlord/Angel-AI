@@ -1,0 +1,23 @@
+ANGEL AI 2.7 KNOWLEDGE SETUP
+
+Recommended:
+1. Put all knowledge packs in a separate folder such as D:\Angel_Knowledge.
+2. Start Angel.
+3. Open Manage Knowledge.
+4. Choose Folder.
+5. Select D:\Angel_Knowledge.
+6. Angel indexes the folder.
+
+Bulk loading:
+- Add Files: select multiple files at once.
+- Import ZIP: select a ZIP containing knowledge files.
+
+Backups:
+- Angel backs up knowledge before update/remove/replacement.
+- Backups live in Angel's data\knowledge_backups folder.
+- Backup All creates a complete snapshot.
+
+Do not place backups inside the active knowledge folder.
+
+Main brain rules:
+ANGEL_LOCAL_KNOWLEDGE.md tells Angel how to distinguish retrieved local knowledge from model knowledge.

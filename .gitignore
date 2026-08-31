@@ -1,0 +1,83 @@
+﻿# ==========================================
+# Angel AI - Git Ignore
+# ==========================================
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build output
+build/
+dist/*
+!dist/AngelAI.exe
+
+# Runtime logs
+*.log
+test-output/
+smoke-*.json
+acceptance-*.json
+*-acceptance*.json
+
+# Persistent local application data
+data/
+cache/
+backups/
+projects/
+creator/
+
+# Local knowledge additions
+knowledge/
+
+# AI models
+models/
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# Secrets / credentials
+.env
+.env.*
+credentials*
+secrets*
+tokens*
+api_keys*
+apikey*
+api-key*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Editor / OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Machine-specific information
+machine-info.json
+local-config.json
+hardware-report.json
+
+# Angel recovery / private output
+ANGEL_SEED/
+Angel_Seed_*/
+Recovery_Output/

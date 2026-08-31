@@ -1,0 +1,15 @@
+{
+  "version": "5.9",
+  "python_files_validated": 18,
+  "numbered_knowledge": 603,
+  "local_knowledge_plus_ollama": true,
+  "ollama_fallback_preserved": true,
+  "application_owned_provenance": true,
+  "application_owned_gpt_identity": true,
+  "learning_schema_root_based": true,
+  "single_data_location": true,
+  "dist_only_exe": true,
+  "light_dark_chat_preserved": true,
+  "no_launcher": true,
+  "no_shortcut": true
+}

@@ -1,0 +1,13 @@
+{
+  "version": "6.0",
+  "python_files_validated": 18,
+  "numbered_knowledge": 603,
+  "thinking_indicator": true,
+  "indicator_until_response": true,
+  "does_not_expose_private_reasoning": true,
+  "ollama_fallback": true,
+  "source_truth": true,
+  "dist_only_exe": true,
+  "single_data": true,
+  "light_dark_chat": true
+}
