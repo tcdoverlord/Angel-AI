@@ -1,0 +1,4 @@
+# Optional desktop shell. The UI itself is HTML/CSS/JavaScript and works in a browser fallback.
+pywebview>=5.0
+
+cryptography>=42.0

@@ -1,0 +1,290 @@
+# ============================================================
+# ANGEL AI BUILD - Git Ignore
+# Angel Platform OS / Angel AI / Angel Nexus
+# Protects local secrets, personal data, runtime state, and
+# machine-specific files from being committed to Git.
+# ============================================================
+
+# -------------------------
+# Environment and secrets
+# -------------------------
+.env
+.env.*
+!.env.example
+*.env
+*.secret
+*.secrets
+secrets/
+private/
+credentials/
+tokens/
+api_keys/
+*_credentials.*
+*_secrets.*
+*_token.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+
+# -------------------------
+# Personal identity/data
+# -------------------------
+personal/
+private_data/
+user_data/
+user_profiles/
+profiles/
+accounts/
+contacts/
+address_book/
+personal_notes/
+private_notes/
+journal/
+medical/
+financial/
+tax/
+legal/
+identity/
+identities/
+
+# Angel local memory and user state
+angel_memory.json
+angel_memory_*.json
+memory.json
+memory_*.json
+user_memory.json
+conversation_history.json
+chat_history.json
+chat_sessions/
+conversations/
+sessions/
+user_state.json
+app_state.json
+local_state.json
+preferences.json
+settings.local.json
+
+# -------------------------
+# Local runtime data
+# -------------------------
+data/
+runtime/
+runtime_data/
+storage/
+cache/
+tmp/
+temp/
+uploads/
+downloads/
+exports/
+backups/
+backup/
+snapshots/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# Preserve safe directory documentation if present
+!.gitkeep
+!**/.gitkeep
+
+# -------------------------
+# Logs and diagnostics
+# -------------------------
+logs/
+log/
+*.log
+*.trace
+*.dump
+crash_reports/
+diagnostics/
+debug/
+*.dmp
+
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+.Python
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# -------------------------
+# Windows and editors
+# -------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+.idea/
+*.swp
+*.swo
+*~
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# -------------------------
+# Local application builds
+# -------------------------
+# Ignore generated and locally signed builds.
+# Commit build scripts, not private executable output.
+release/
+releases/
+artifacts/
+signed/
+signed_builds/
+compiled/
+local_build/
+*.exe
+*.msi
+*.zip
+*.7z
+
+# -------------------------
+# Certificates and signing
+# -------------------------
+certificates/
+certs/
+signing/
+signing_keys/
+*.pfx
+*.p12
+*.snk
+*.sig
+
+# -------------------------
+# AI models and local model data
+# -------------------------
+models/
+model_cache/
+ollama_models/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+
+# -------------------------
+# OS and machine-specific files
+# -------------------------
+*.machine.json
+*.local.json
+machine_config.json
+host_config.json
+device_config.json
+hardware_profile.json
+network_config.json
+local_config.json
+
+# -------------------------
+# Temporary repair and backup files
+# -------------------------
+*.backup
+*.bak
+*.old
+*.orig
+*.rej
+*.tmp
+*.temp
+*.patch
+repair_backups/
+migration_backups/
+
+# -------------------------
+# Local launch files that may
+# contain personal machine paths
+# -------------------------
+# Review these files before committing if they contain
+# hard-coded usernames, paths, IP addresses, or secrets.
+# Uncomment if you want them excluded entirely:
+# RUN_LOCAL.bat
+# local_startup.bat
+# machine_setup.ps1
+
+# -------------------------
+# Project-specific local files
+# -------------------------
+.local/
+.local.*
+angel.local.*
+angel_platform.local.*
+nexus.local.*
+settings.local.*
+config.local.*
+
+# -------------------------
+# Keep safe templates visible
+# -------------------------
+!.env.example
+!config.example.*
+!settings.example.*
+!**/examples/**
+!**/templates/**
+
+# =========================================================
+# ANGEL AI - LOCAL VAULT DATA
+# Never commit local vault storage or secret material
+# =========================================================
+
+# Local encrypted vault data
+**/vault_data/
+**/vault/
+**/*vault*.db
+**/*vault*.sqlite
+**/*vault*.sqlite3
+
+# Local secret and credential files
+**/*secrets*.json
+**/*credentials*.json
+**/*private*.json
+
+# Local encryption/key material
+**/*encryption_key*
+**/*master_key*
+**/*.key
+**/*.pem
+
+# Local runtime token/session files
+**/*token*.json
+**/*session*.json

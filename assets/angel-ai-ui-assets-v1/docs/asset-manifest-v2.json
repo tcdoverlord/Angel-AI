@@ -1,0 +1,23 @@
+{
+  "pack_version": "3.0",
+  "surfaces": {
+    "angel_ai": {
+      "reference": "images/angel-ai-reference.png",
+      "style": "dark-neon-chat-assistant"
+    },
+    "angel_nexus": {
+      "reference": "images/angel-nexus-reference.png",
+      "header_reference": "images/angel-nexus-header-reference.png",
+      "hero_reference": "images/angel-nexus-hero-banner.png",
+      "dashboard_reference": "images/angel-nexus-dashboard-reference.png",
+      "style": "dark-neon-modular-control-center"
+    }
+  },
+  "implementation_note": "Reference imagery supports visual implementation; functional controls must be implemented separately.",
+  "user_avatar": {
+    "template": "images/user-avatar-template.svg",
+    "fallback_initial": "U",
+    "behavior": "Replace {{INITIAL}} with the first letter of the user's display name, preferably uppercase.",
+    "privacy_note": "Uses a letter-based avatar by default; no personal photo is required."
+  }
+}
