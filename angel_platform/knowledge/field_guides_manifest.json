@@ -1,0 +1,25 @@
+{
+  "name": "Angel Intelligence Knowledge Field Guides",
+  "version": "3.3.2",
+  "guides": [
+    "angel-memory.md",
+    "angel-tools.md",
+    "git-devops.md",
+    "linux-admin.md",
+    "networking.md",
+    "observability.md",
+    "ollama-local-ai.md",
+    "python-engineering.md",
+    "raspberry-pi.md",
+    "recovery-operations.md",
+    "security-hardening.md",
+    "windows-admin.md"
+  ],
+  "principles": [
+    "evidence-first",
+    "reversible changes",
+    "least privilege",
+    "explicit approval",
+    "separate memory from training data"
+  ]
+}

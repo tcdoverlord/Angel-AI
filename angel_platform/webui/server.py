@@ -4,7 +4,12 @@ from pathlib import Path
 from datetime import datetime, timezone
 from angel_platform.execution import SafeExecutor
 from urllib.parse import quote, urlparse
-import json, urllib.request, platform, shutil, sys, os, subprocess, uuid, re, shlex, zipfile, tempfile, html, base64, hashlib, hmac, secrets
+import json, urllib.request, platform, shutil, sys, os, subprocess, uuid, re, shlex, zipfile, tempfile, html, base64, hashlib, hmac, secrets, threading
+from angel_platform.web_search import search_web
+from angel_platform.knowledge.library import context_for, cards, search as search_knowledge, record_feedback, status as knowledge_status
+from angel_platform.capabilities.registry import inventory as capability_inventory
+from angel_platform.storage.database import get_database
+
 
 ROOT = Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
@@ -31,6 +36,12 @@ for _persistent_name in (
 ):
     _migrate_legacy_file(_persistent_name)
 
+# Import legacy history once; the JSON file remains as a compatibility/export copy.
+try:
+    _DATABASE.migrate_history_json(DATA / "chat_history.json")
+except Exception:
+    pass
+
 HISTORY = DATA / "chat_history.json"
 ACTIVITY = DATA / "activity.json"
 MODULES_FILE = DATA / "modules.json"
@@ -41,6 +52,8 @@ VAULT_FILE = SECURE_DIR / "github_vault.json"
 SECURE_DIR.mkdir(parents=True, exist_ok=True)
 _UNLOCKED_GITHUB_TOKEN = None
 _PENDING_EXECUTIONS = {}
+_HISTORY_LOCK = threading.RLock()
+_DATABASE = get_database()
 BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 MODULES_DIR = PROJECT / "modules"
 GITHUB_MODULES_DIR = MODULES_DIR / "github_modules"
@@ -100,15 +113,24 @@ def save_json(path, value):
 
 
 def append_history(record):
-    """Keep the complete local history; use a backup if the main file is damaged."""
-    records = load_json(HISTORY, None)
-    if not isinstance(records, list):
-        records = load_json(HISTORY.with_suffix(".json.bak"), [])
-    if not isinstance(records, list):
-        records = []
-    records.append(record)
-    save_json(HISTORY, records)
-    return len(records)
+    """Append to complete local history without concurrent read/modify/write loss."""
+    with _HISTORY_LOCK:
+        records = load_json(HISTORY, None)
+        if not isinstance(records, list):
+            records = load_json(HISTORY.with_suffix(".json.bak"), [])
+        if not isinstance(records, list):
+            records = []
+        records.append(record)
+        save_json(HISTORY, records)
+        try:
+            role = str(record.get("role", "system"))
+            content = str(record.get("content", ""))
+            if content:
+                _DATABASE.record_message(role, content, str(record.get("conversation_id", "default")))
+        except Exception:
+            # JSON remains the compatibility fallback if SQLite is unavailable.
+            pass
+        return len(records)
 
 
 def module_records():
@@ -1224,6 +1246,26 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(raw)
             return
+        if self.path == "/api/knowledge":
+            return self.send_json({"status": knowledge_status(), "cards": cards()})
+        if self.path.startswith("/api/knowledge/search?"):
+            from urllib.parse import parse_qs, urlparse
+            query = parse_qs(urlparse(self.path).query).get("q", [""])[0]
+            if not query.strip():
+                return self.send_json({"error": "Knowledge query is required"}, 400)
+            return self.send_json({"query": query, "results": search_knowledge(query, 8)})
+        if self.path == "/api/capabilities":
+            return self.send_json({"release": "3.3.2", "capabilities": capability_inventory()})
+        if self.path.startswith("/api/search?"):
+            from urllib.parse import parse_qs, urlparse
+            query = parse_qs(urlparse(self.path).query).get("q", [""])[0]
+            if not query.strip():
+                return self.send_json({"error": "Search query is required"}, 400)
+            try:
+                results = [item.to_dict() for item in search_web(query, 5)]
+                return self.send_json({"query": query, "results": results, "source": "DuckDuckGo HTML"})
+            except Exception as exc:
+                return self.send_json({"query": query, "results": [], "error": "Web search unavailable: " + str(exc)}, 502)
         if self.path == "/api/vault/status":
             return self.send_json(vault_status())
         if self.path == "/api/status":
@@ -1317,6 +1359,18 @@ class Handler(BaseHTTPRequestHandler):
             if not module:
                 return self.send_json({"error": "Module not found in the catalog."}, 404)
             return self.send_json({"result": f"Removed {module['name']} from catalog. Local files were preserved."})
+        if self.path == "/api/feedback":
+            try:
+                feedback_id = record_feedback(
+                    str(data.get("message", "")),
+                    str(data.get("rating", "")),
+                    str(data.get("note", "")),
+                    str(data.get("conversation_id", "")),
+                )
+                log_activity("Angel feedback recorded")
+                return self.send_json({"status": "saved", "feedback_id": feedback_id})
+            except Exception as exc:
+                return self.send_json({"error": "Feedback was not saved: " + str(exc)}, 400)
         if self.path == "/api/action":
             action = data.get("action", "")
             result = action_result(action, data)
@@ -1342,6 +1396,9 @@ class Handler(BaseHTTPRequestHandler):
                     "Never recalculate or guess the weekday from memory, UTC, or a prior message. "
                     "Use this context for date/time questions; do not claim that the current date or time is unavailable."
                 )
+                knowledge_context = context_for(message, 6)
+                if knowledge_context:
+                    knowledge_context = "\\n\\n" + knowledge_context
                 system_prompt = (
                     "You are Angel, the warm conversational heart of Angel Nexus. "
                     "Speak naturally, kindly, and directly, like a dependable teammate who is present and attentive. "
@@ -1351,7 +1408,7 @@ class Handler(BaseHTTPRequestHandler):
                     "Hold a natural conversation, ask clarifying questions when useful, and do not invoke or imply tools "
                     "unless the user explicitly requests the related action. Never execute system changes without explicit approval. "
                     + f"Cooperative AI lane selected: {lane}. This is a routing hint, not a separate conversation. All lanes share Angel\'s context and must support one another. " + date_context + " " + capability_report() + " "
-                    "Treat the capability report as authoritative for this session. The local conversation history path is exactly: " + str(HISTORY) + ". Conversation history is application-managed local storage, not cloud storage or GitHub storage. Persistent memory is not the same as chat history; do not claim either is saved unless the application reports it. Never claim a command, API call, lookup, repair, or change occurred unless a verified application result is supplied. If no result is supplied, say it was not performed."
+                    "Treat the capability report as authoritative for this session. The local conversation history path is exactly: " + str(HISTORY) + ". Conversation history is application-managed local storage, not cloud storage or GitHub storage. Persistent memory is not the same as chat history; do not claim either is saved unless the application reports it. Never claim a command, API call, lookup, repair, or change occurred unless a verified application result is supplied. If no result is supplied, say it was not performed." + knowledge_context
                 )
                 prompt_messages = [{"role":"system", "content":system_prompt}] + history
                 # Deterministic routes handle only verified application actions.

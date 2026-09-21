@@ -55,8 +55,8 @@ function currentMessageText(el){return el?.querySelector('.body')?.textContent?.
 
 function addMessage(who,text){
   const el=document.createElement('article');
-  el.className='message '+(who==='You'?'user':'');
-  el.innerHTML=`<div class="meta"><b>${who==='You'?'A':'🪽'} &nbsp; ${esc(who)}</b><span>${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span></div><div class="body">${esc(text)}</div><div class="actions"><button data-copy>Copy</button><button data-speak>Read aloud</button><button data-stop disabled>Stop reading</button></div>`;
+  el.className='message '+(who==='Me'?'user':'');
+  el.innerHTML=`<div class="meta"><b>${who==='Me'?'M':'🪽'} &nbsp; ${esc(who)}</b><span>${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span></div><div class="body">${esc(text)}</div><div class="actions"><button data-copy>Copy</button><button data-speak>Read aloud</button><button data-stop disabled>Stop reading</button></div>`;
   const copyButton=el.querySelector('[data-copy]');
   const speakButton=el.querySelector('[data-speak]');
   const stopButton=el.querySelector('[data-stop]');
@@ -76,35 +76,64 @@ function addMessage(who,text){
 
 function setBusy(v){busy=v;$('#send').disabled=v;$('#send').style.opacity=v?'.55':'1';}
 
+function readLocalConversations(){
+  try{return JSON.parse(localStorage.getItem('angel_conversations')||'[]');}
+  catch{return [];}
+}
+function writeLocalConversations(items){
+  localStorage.setItem('angel_conversations',JSON.stringify(items.slice(0,100)));
+}
 function saveConversation(){
   if(!history.length)return;
-  const saved=JSON.parse(localStorage.getItem('angel_conversations')||'[]');
+  const saved=readLocalConversations();
   const first=history.find(x=>x.role==='user');
   const title=(first?.content||'Untitled Chat').slice(0,48);
-  const record={id:Date.now().toString(),title,history:[...history],updated:new Date().toISOString()};
-  saved.unshift(record);
-  localStorage.setItem('angel_conversations',JSON.stringify(saved.slice(0,30)));
+  const existing=saved.find(x=>x.id===window.angelConversationId);
+  const record={id:window.angelConversationId||Date.now().toString(),title,history:[...history],updated:new Date().toISOString()};
+  const next=existing?saved.map(x=>x.id===record.id?record:x):[record,...saved];
+  window.angelConversationId=record.id;
+  writeLocalConversations(next);
   renderConversationHistory();
 }
 function renderConversationHistory(){
   const box=$('#conversationHistory');if(!box)return;
-  const saved=JSON.parse(localStorage.getItem('angel_conversations')||'[]');
+  const saved=readLocalConversations().sort((a,b)=>String(b.updated||'').localeCompare(String(a.updated||'')));
   box.innerHTML=saved.map(item=>`<button class="history-item" data-history-id="${esc(item.id)}" title="${esc(item.title)}">${esc(item.title)}</button>`).join('')||'<small class="history-empty">No saved conversations yet.</small>';
   box.querySelectorAll('[data-history-id]').forEach(b=>b.onclick=()=>loadConversation(b.dataset.historyId));
 }
 function loadConversation(id){
   if(busy)return alert('Please wait for the current response to finish.');
-  const saved=JSON.parse(localStorage.getItem('angel_conversations')||'[]');
-  const item=saved.find(x=>x.id===id);if(!item)return;
+  const item=readLocalConversations().find(x=>x.id===id);if(!item)return;
+  window.angelConversationId=id;
   history=item.history||[];messages.innerHTML='';
-  history.forEach(x=>addMessage(x.role==='user'?'You':'Angel AI',x.content));
+  history.forEach(x=>addMessage(x.role==='user'?'Me':'Angel AI',x.content));
   messages.scrollTop=messages.scrollHeight;renderConversationHistory();
+}
+async function loadPersistentServerHistory(){
+  try{
+    const response=await fetch('/api/history');
+    if(!response.ok)return;
+    const payload=await response.json();
+    const serverHistory=Array.isArray(payload.history)?payload.history:[];
+    if(!serverHistory.length)return;
+    const normalized=serverHistory.map(x=>({role:x.role==='assistant'?'assistant':'user',content:String(x.content||'')})).filter(x=>x.content);
+    if(!normalized.length)return;
+    const local=readLocalConversations();
+    const serverId='server-history';
+    const record={id:serverId,title:'Recovered Angel History',history:normalized,updated:new Date().toISOString()};
+    const existing=local.find(x=>x.id===serverId);
+    writeLocalConversations(existing?[record,...local.filter(x=>x.id!==serverId)]:[record,...local]);
+    // Keep recovered history available in the history list, but leave the
+    // currently opened chat blank until the user sends a message.
+    renderConversationHistory();
+  }catch(error){console.warn('Persistent history could not be loaded:',error);}
 }
 function startNewChat(){
   if(busy){alert('Please wait for the current response to finish.');return;}
   if(history.length){saveConversation();}
+  window.angelConversationId=null;
   history=[];messages.innerHTML='';
-  addMessage('Angel AI','Fresh conversation started. I’m here, Anthony. What shall we work on?');
+  // A new chat is intentionally blank. Angel speaks only after the user sends a message.
   $('#prompt')?.focus();renderConversationHistory();
 }
 
@@ -122,7 +151,7 @@ async function getDeviceLocation(){
 async function send(){
   if(busy)return;
   const input=$('#prompt'),text=input.value.trim();if(!text)return;
-  input.value='';addMessage('You',text);history.push({role:'user',content:text});
+  input.value='';addMessage('Me',text);history.push({role:'user',content:text});
   const pending=addMessage('Angel AI','Thinking…');setBusy(true);
   try{
     let location=null;
@@ -183,4 +212,4 @@ $('#prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.p
 $('#voice').onclick=()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return alert('Voice input is not available in this browser.');const r=new R();r.onresult=e=>$('#prompt').value=e.results[0][0].transcript;r.start()};
 $('#nexusCommand').onclick=()=>{const x=prompt('Ask Nexus to inspect (system_health, module_scan, tool_inventory):','system_health');if(x)action(x)};
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>renderPage(b.dataset.page));
-refreshStatus();refreshActivity();renderConversationHistory();addMessage('Angel AI','Welcome to Just Chat. Ask me naturally, and I can help you find projects, inspect tools, work with modules, and prepare approved Nexus actions.');
+refreshStatus();refreshActivity();renderConversationHistory();loadPersistentServerHistory();
