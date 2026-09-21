@@ -1,0 +1,154 @@
+[
+  {
+    "id": "windows-safe-operations",
+    "title": "Windows Safe Operations",
+    "tags": [
+      "windows",
+      "powershell",
+      "safety"
+    ],
+    "content": "Prefer read-only inspection first. Before changing services, firewall rules, networking, users, registry, or files, show the proposed command, explain impact, request explicit approval, and report the verified result. Never claim a command ran without an execution result."
+  },
+  {
+    "id": "powershell-diagnostics",
+    "title": "PowerShell Diagnostics",
+    "tags": [
+      "powershell",
+      "diagnostics",
+      "windows"
+    ],
+    "content": "Useful read-only checks include Get-ComputerInfo, Get-CimInstance Win32_OperatingSystem, Get-Service, Get-NetAdapter, Get-NetIPConfiguration, Get-Command python, git, ollama, and docker. Avoid destructive flags during discovery."
+  },
+  {
+    "id": "linux-diagnostics",
+    "title": "Linux Diagnostics",
+    "tags": [
+      "linux",
+      "bash",
+      "debian"
+    ],
+    "content": "Useful read-only checks include uname -a, cat /etc/os-release, df -h, free -h, ip addr, ip route, systemctl --failed, command -v python3, git, ollama, and docker. Use sudo only when necessary and explain why."
+  },
+  {
+    "id": "git-workflow",
+    "title": "Git Workflow",
+    "tags": [
+      "git",
+      "github",
+      "development"
+    ],
+    "content": "A safe Git workflow is status, diff, branch confirmation, focused change, tests, review, then commit. Avoid force-push and destructive reset unless the user explicitly understands the consequences."
+  },
+  {
+    "id": "python-projects",
+    "title": "Python Project Hygiene",
+    "tags": [
+      "python",
+      "testing",
+      "development"
+    ],
+    "content": "Use a project virtual environment, keep dependencies in requirements or pyproject metadata, run compileall or tests before packaging, and preserve a backup before automated edits. Report failures instead of masking them."
+  },
+  {
+    "id": "ollama-local-ai",
+    "title": "Ollama Local AI",
+    "tags": [
+      "ollama",
+      "ai",
+      "local"
+    ],
+    "content": "Ollama provides local model inference. Model quality depends on the selected model, available RAM/VRAM, context length, and prompt construction. A local assistant should report when Ollama is unavailable and must not invent tool results."
+  },
+  {
+    "id": "rag-principle",
+    "title": "Retrieval-Augmented Generation",
+    "tags": [
+      "rag",
+      "knowledge",
+      "ai"
+    ],
+    "content": "RAG retrieves relevant local knowledge at request time and adds it to the model context. Retrieved text is supporting context, not unquestionable truth. Show source titles or identifiers when practical and avoid injecting unrelated records."
+  },
+  {
+    "id": "angel-memory",
+    "title": "Angel Memory Boundaries",
+    "tags": [
+      "memory",
+      "privacy",
+      "angel"
+    ],
+    "content": "Short-term chat history supports the current conversation. Long-term memory should be selective, user-visible, editable, and deletable. Do not automatically treat every user message as a permanent fact."
+  },
+  {
+    "id": "angel-two-lanes",
+    "title": "Angel Chat Lanes",
+    "tags": [
+      "chat",
+      "sys chat",
+      "angel"
+    ],
+    "content": "Normal Chat is for conversation, planning, learning, and explanations. Sys Chat is for technical diagnosis and controlled operations. Both lanes should share relevant context but Sys Chat must use explicit approval and verified results for impactful actions."
+  },
+  {
+    "id": "networking-basics",
+    "title": "Networking Basics",
+    "tags": [
+      "networking",
+      "tcp",
+      "ip"
+    ],
+    "content": "For network diagnosis, establish link state, IP configuration, default route, DNS resolution, and reachability in that order. Distinguish local interface problems from gateway, DNS, and remote-service problems."
+  },
+  {
+    "id": "docker-basics",
+    "title": "Docker Troubleshooting",
+    "tags": [
+      "docker",
+      "containers",
+      "linux",
+      "windows"
+    ],
+    "content": "Check whether the Docker CLI exists, whether the daemon is reachable, and whether the current user has permission. Separate installation failures, service startup failures, and image pull/network failures."
+  },
+  {
+    "id": "web-research-hygiene",
+    "title": "Web Research Hygiene",
+    "tags": [
+      "web",
+      "research",
+      "sources"
+    ],
+    "content": "When web research is available, distinguish retrieved facts from inference, include source links, note publication dates for changing information, and say when a lookup failed or was not performed."
+  },
+  {
+    "id": "feedback-loop",
+    "title": "Feedback Loop",
+    "tags": [
+      "feedback",
+      "learning",
+      "ai"
+    ],
+    "content": "Feedback should be stored as a correction signal or preference, not silently used as model training. Review feedback before converting it into a knowledge card, and allow the user to remove it."
+  },
+  {
+    "id": "raspberry-pi",
+    "title": "Raspberry Pi Home Lab",
+    "tags": [
+      "raspberry pi",
+      "homelab",
+      "linux",
+      "rtmp"
+    ],
+    "content": "For Raspberry Pi services, verify architecture, storage, service status, listening ports, and network reachability. Keep backups of configuration files and prefer systemd service logs for troubleshooting."
+  },
+  {
+    "id": "release-discipline",
+    "title": "Angel Release Discipline",
+    "tags": [
+      "release",
+      "build",
+      "testing"
+    ],
+    "content": "Every Angel release should preserve the previous working tree, add identifiable features, include release notes, run syntax/tests, and record known limitations. Archive growth should come from real code, tests, documentation, and knowledge—not filler files."
+  }
+]

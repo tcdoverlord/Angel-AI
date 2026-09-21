@@ -1,0 +1,14 @@
+{
+  "release": "3.3.2",
+  "baseline": "Angel Platform 3.3.1 Master Intelligence 40MB Plus",
+  "preservation_policy": "Existing files retained; additions are integrated into the knowledge library and server.",
+  "knowledge_expansion_cards": 2600,
+  "features": [
+    "knowledge retrieval",
+    "interaction patterns",
+    "feedback API",
+    "persistent history",
+    "module refresh compatibility"
+  ],
+  "fine_tuning": false
+}

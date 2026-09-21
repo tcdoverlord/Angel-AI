@@ -1,0 +1,665 @@
+{
+  "version": "3.3.1",
+  "cards": [
+    {
+      "path": "angel_platform/intelligence/library/001_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 1: Windows diagnostics and PowerShell safety",
+      "bytes": 22980,
+      "sha256": "cf494c0f4c7030175683d53483d60e3dfdc0e9fb131d497b0f2e135dd08b94f4"
+    },
+    {
+      "path": "angel_platform/intelligence/library/002_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 2: Linux administration and Debian networking",
+      "bytes": 23017,
+      "sha256": "c311bdc714ff38974d7e44098af3523a744eba9480d72303fbb01b295e0f91a1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/003_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 3: Raspberry Pi operations",
+      "bytes": 22314,
+      "sha256": "4318cb7b9801ea98621d2726ff4808a2f72f46fa85a6ca9501065402d3ec23d4"
+    },
+    {
+      "path": "angel_platform/intelligence/library/004_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 4: Docker and container troubleshooting",
+      "bytes": 22795,
+      "sha256": "465ad643deb84acac9b97053162fb2e24eae96495e7a79da5e93d05585b50168"
+    },
+    {
+      "path": "angel_platform/intelligence/library/005_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 5: Python debugging",
+      "bytes": 22055,
+      "sha256": "21fb1a55a672b17bb2acb296d7c4898e1f6731eec9897bc39324916f4bf6aa4a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/006_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 6: Git and GitHub workflow",
+      "bytes": 22314,
+      "sha256": "4b8f93a992cada4345c44945ca51d261e00bf2c1b0818d06f76c18944d68f890"
+    },
+    {
+      "path": "angel_platform/intelligence/library/007_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 7: OBS and creator infrastructure",
+      "bytes": 22573,
+      "sha256": "9315ba73dcccbb2e2072fbe2503394aac5bf69011f8daa31ca7c0f2dc3719996"
+    },
+    {
+      "path": "angel_platform/intelligence/library/008_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 8: Web research and source quality",
+      "bytes": 22610,
+      "sha256": "93fd72eb5f54b00cb8b0ff4c3188fd23d15c7440acbfd47e51a17bb807d3bb51"
+    },
+    {
+      "path": "angel_platform/intelligence/library/009_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 9: Privacy and security hygiene",
+      "bytes": 22499,
+      "sha256": "ce4aa3cb38ad9a94c9126c9ffb662207705aa6d9b031cfc6f09feaa44c006ec5"
+    },
+    {
+      "path": "angel_platform/intelligence/library/010_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 10: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "05ac4d4b892e84c3863a4f385af0547e901f29ad55b56f6d3545e3bcb6e69d17"
+    },
+    {
+      "path": "angel_platform/intelligence/library/011_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 11: System monitoring",
+      "bytes": 22111,
+      "sha256": "7227d77b310c900812260ae56a604af05d648f79ff62200daa0c27cf60f81d32"
+    },
+    {
+      "path": "angel_platform/intelligence/library/012_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 12: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "6d4f75aff9f9c012d4402809b912f504b4eb9a0cbcc67af650ebe546ddab5cde"
+    },
+    {
+      "path": "angel_platform/intelligence/library/013_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 13: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "ae7ed6bbbc616453b4d1e21abe615b74d21667f9b0a29436a6719ad7d30a2d95"
+    },
+    {
+      "path": "angel_platform/intelligence/library/014_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 14: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "50c777acdb82c4885384dbfdeb5358e33dbc7129b48a41c63f4d7a3995856594"
+    },
+    {
+      "path": "angel_platform/intelligence/library/015_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 15: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "f72b08b2ad9d6f2191d4e911ab859a6aa70cc0156afc9f1422264acb78de7b08"
+    },
+    {
+      "path": "angel_platform/intelligence/library/016_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 16: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "f2b901eda5d266fecbb58b4d179dd843bbb57c36d6e615849ebcebcabf286150"
+    },
+    {
+      "path": "angel_platform/intelligence/library/017_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 17: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "b5505e0a55bc3578f07a4c37b6f238aed9a82261db6e7718981b3d3bd921d57c"
+    },
+    {
+      "path": "angel_platform/intelligence/library/018_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 18: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "64c4008fdaca486140e8d232379fba5654a1ecfb64ca634eb6016e02d8644f32"
+    },
+    {
+      "path": "angel_platform/intelligence/library/019_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 19: Python debugging",
+      "bytes": 22074,
+      "sha256": "0a4a5507832dc8958da8e3e9157427e2c73acd79459e047a507b06f4b20a3554"
+    },
+    {
+      "path": "angel_platform/intelligence/library/020_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 20: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "e581bfbe5a5625f970b30bd5139bf68f0fa43f39672d2bcd7105b019f3b54e16"
+    },
+    {
+      "path": "angel_platform/intelligence/library/021_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 21: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "13f323b039f66cde6166a90ba43269f1fbfe7963b29b1c588ea27dd192b59c2e"
+    },
+    {
+      "path": "angel_platform/intelligence/library/022_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 22: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "b78e62436dd9de871b5d476341dd903489f0748689affbe4a83d20aac1028394"
+    },
+    {
+      "path": "angel_platform/intelligence/library/023_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 23: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "cc442037099fed0c51950a4a072775def611fcc54003fab603f10f7bfd6aa0ad"
+    },
+    {
+      "path": "angel_platform/intelligence/library/024_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 24: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "b9ea45547b48288b96eee37a62b9d22333e09a78a6e9ac24030fdba3c0f7dbdd"
+    },
+    {
+      "path": "angel_platform/intelligence/library/025_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 25: System monitoring",
+      "bytes": 22111,
+      "sha256": "3b2b51739418406ce74f1666d79a12fd687370dea977561f262044d4a66c1d5f"
+    },
+    {
+      "path": "angel_platform/intelligence/library/026_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 26: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "57935fdf5e7c81187f99ddadb2b864a4ca810a3fcd5e26e423054e744eef5002"
+    },
+    {
+      "path": "angel_platform/intelligence/library/027_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 27: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "47b33dc7e7f6908eb8e1b6130897293c21ff1ec54bc4d912aff02ad5885f44eb"
+    },
+    {
+      "path": "angel_platform/intelligence/library/028_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 28: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "8920bd09f23cdbbbec334e46718325e654396074dd9e30c148522caf62a0043b"
+    },
+    {
+      "path": "angel_platform/intelligence/library/029_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 29: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "56e94222e18244ffbf92c9740bb509c5a6065f704382716ceb9d4810933266d6"
+    },
+    {
+      "path": "angel_platform/intelligence/library/030_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 30: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "841404a9f29d3e1daddf294f55c0bc9b8880adddbe923ffd4ce2bdc3e98d77ca"
+    },
+    {
+      "path": "angel_platform/intelligence/library/031_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 31: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "ffb27dc0ba31a143eded10f1885bedf3bf98132e66a961dab57d31524fe7ad89"
+    },
+    {
+      "path": "angel_platform/intelligence/library/032_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 32: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "1520e8554099087af6993aafedc06ffc26ddab35dfb90a141934f4cfb3c7366d"
+    },
+    {
+      "path": "angel_platform/intelligence/library/033_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 33: Python debugging",
+      "bytes": 22074,
+      "sha256": "bb96daf533d3a80203b8cd690dae34ee55821a1fa75f4d0c772b80ad53499f46"
+    },
+    {
+      "path": "angel_platform/intelligence/library/034_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 34: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "f70c8f1c2a3b4f908a48adda951b8dbb515379765c788935a17f418c58c0b452"
+    },
+    {
+      "path": "angel_platform/intelligence/library/035_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 35: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "307bc181b4ce499767b4350e5c9d27cc540d71b1482268a5cab1114c39273089"
+    },
+    {
+      "path": "angel_platform/intelligence/library/036_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 36: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "7faf779e108e31b32495197088718eb96c74a5268c431267964806f8658af35b"
+    },
+    {
+      "path": "angel_platform/intelligence/library/037_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 37: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "f718e1c48237e46a2f53f4a1ede996c6759d1dc84b5aa15be0c6d83a2f01020a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/038_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 38: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "731ec602aca9a92be923ce5efb0bb177de39a862d7a5d0cc9823f8bc03d82cfa"
+    },
+    {
+      "path": "angel_platform/intelligence/library/039_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 39: System monitoring",
+      "bytes": 22111,
+      "sha256": "17f4af98ec2051500e21e9412f4ef8bef023d77fd046b30b1e99f4d547be4afa"
+    },
+    {
+      "path": "angel_platform/intelligence/library/040_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 40: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "c94dc2365898816ef0321e228bcb4c836ab51806bf033423f54dd13afda8f11a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/041_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 41: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "9c74ccca9acdf85c59d6c21d33ee0371da4da1da821463d01ddcc5cd996849b2"
+    },
+    {
+      "path": "angel_platform/intelligence/library/042_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 42: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "8de986122846eabc7aed9a8a1afd746ba97eabc342beef9ef3c0f921d0b5093f"
+    },
+    {
+      "path": "angel_platform/intelligence/library/043_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 43: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "4b8cb55446d213ef3ebd991ded0a64a45e79b7d86cc0e6bc10fb154b47b42b9c"
+    },
+    {
+      "path": "angel_platform/intelligence/library/044_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 44: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "02ea844881783a45760ed091c478459066d1b9b69cfcd4f0f222878a8a9ff7cd"
+    },
+    {
+      "path": "angel_platform/intelligence/library/045_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 45: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "514339d6d932f47faaae220bdff6eb0ef54282bc04ccffdb053c95ceda62d769"
+    },
+    {
+      "path": "angel_platform/intelligence/library/046_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 46: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "6b9d133d0aad0d9d84eebd57283fcd483a9a5708921cdeb5fb5c4980a1d1a181"
+    },
+    {
+      "path": "angel_platform/intelligence/library/047_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 47: Python debugging",
+      "bytes": 22074,
+      "sha256": "b9eb48ba3e6b928236e9137781f67f1482477b1ca36b67f357752486590c5c79"
+    },
+    {
+      "path": "angel_platform/intelligence/library/048_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 48: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "c5effecb203ce043c9313c273fae78faa79877779d6711189572ed72cd2d2d28"
+    },
+    {
+      "path": "angel_platform/intelligence/library/049_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 49: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "8dccd1419eb322cfa416b2c8764a143c3702e0ebb3cc7ede66750d7339d3d0a9"
+    },
+    {
+      "path": "angel_platform/intelligence/library/050_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 50: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "fb463c5029cb810b2b047afff4ad99bd61e981974806efd3f8e99904a05709d2"
+    },
+    {
+      "path": "angel_platform/intelligence/library/051_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 51: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "a7272c61a426a0bccf2930957715888f747ed35d10f06d32efcc4094ae1097a1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/052_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 52: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "39997bfb9be391042e1bd07dbeba1f23cc0139203dbb88a23aac0dc487622e74"
+    },
+    {
+      "path": "angel_platform/intelligence/library/053_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 53: System monitoring",
+      "bytes": 22111,
+      "sha256": "7c06b6488bd3efd80ba38f7eec40abdb4389929569e84f29cdcc294e653a6dab"
+    },
+    {
+      "path": "angel_platform/intelligence/library/054_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 54: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "daeeb4a5575855108ec1a939b61685a7e1965276a01c4990713805f3321d27ca"
+    },
+    {
+      "path": "angel_platform/intelligence/library/055_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 55: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "99dcbb1a3514ef65f6129b9a00c80b270aa987b294e715a5a3c8313ec51ed615"
+    },
+    {
+      "path": "angel_platform/intelligence/library/056_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 56: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "818f0fe4095d28b9e041d4ec1d56cae59557fb11935d472c0a22cc9e7b138b0e"
+    },
+    {
+      "path": "angel_platform/intelligence/library/057_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 57: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "f7b36edaf0d1db8bf48671b8d3681ffdc1e676583588768055e5fb05e77d0e63"
+    },
+    {
+      "path": "angel_platform/intelligence/library/058_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 58: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "3dbbb1fb76e53c5ae4128a388735bb4739b64571cc172ba7972138576ec731a1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/059_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 59: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "19e21d305c91f88aeeb237b10465cc8fcf6874b473fa079ef7b70ca44421e324"
+    },
+    {
+      "path": "angel_platform/intelligence/library/060_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 60: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "89ce54bcc9224ed3e762c59888c507bf85bbf2ec14bb82c30a41ac7dcb39c8a9"
+    },
+    {
+      "path": "angel_platform/intelligence/library/061_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 61: Python debugging",
+      "bytes": 22074,
+      "sha256": "6be8c6a1fc2542674b0972367e87dcf519869bb1ee77c5aae54b2eb1ab299333"
+    },
+    {
+      "path": "angel_platform/intelligence/library/062_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 62: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "1a62817cc6c40b93820b4adff175c16ec42c80dc564528a27edc2cc9bc657f9d"
+    },
+    {
+      "path": "angel_platform/intelligence/library/063_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 63: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "634c9b650cf81e31c53f8b11345df6023425fb7c9c2eedcb0d9b89135a3f4c4a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/064_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 64: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "8202b8975dc3f683aa8d2930eb405cc056801fb88ee9fbf4f4703a731c49a17d"
+    },
+    {
+      "path": "angel_platform/intelligence/library/065_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 65: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "d20629a9646dba8c8a3b73f96da8cae68f970713f7f4b4ba23e2d547ff761ab4"
+    },
+    {
+      "path": "angel_platform/intelligence/library/066_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 66: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "43d64ca6218786993e512f933abbed849f28874b548f4b1fe2f621a1ba884665"
+    },
+    {
+      "path": "angel_platform/intelligence/library/067_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 67: System monitoring",
+      "bytes": 22111,
+      "sha256": "5d43ed23c7d2c50a9044cc3c796900b12bbc6504e63fc2e33ad90a26b5e66322"
+    },
+    {
+      "path": "angel_platform/intelligence/library/068_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 68: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "1372328f0849e9b1e9d7080aeb95a18c443981de510d7fd3b246822371dd964a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/069_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 69: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "4d73a814f6a66a8873f6d1b6074b847fe809472433826546db56ad5992e52a30"
+    },
+    {
+      "path": "angel_platform/intelligence/library/070_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 70: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "070952e02ed1546cd4ef7d46e075fcfed538ae681be29d191c3f86cc80bea251"
+    },
+    {
+      "path": "angel_platform/intelligence/library/071_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 71: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "dcf05ea0bb58cf138fb5e87f2bcd6fe9018d1770bd88e8f436a63b1945447459"
+    },
+    {
+      "path": "angel_platform/intelligence/library/072_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 72: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "4664a82a0fa03ad2b1643d35115d47bbc0f1665c838b75f1036e1536240bd42f"
+    },
+    {
+      "path": "angel_platform/intelligence/library/073_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 73: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "8141e0ce6fec23b9e5e9dabcda4c386211b6dea5c18103cd8678eb60dc923d6e"
+    },
+    {
+      "path": "angel_platform/intelligence/library/074_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 74: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "6238b0595e7b342d7cabf882f9ce23b6495ffbea502f0752909fa1f3c8e76b51"
+    },
+    {
+      "path": "angel_platform/intelligence/library/075_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 75: Python debugging",
+      "bytes": 22074,
+      "sha256": "12ec9a734ee80e63ea86f424966eb9dcdd1fca9c4aa479b6ff8eb9bfce6292af"
+    },
+    {
+      "path": "angel_platform/intelligence/library/076_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 76: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "b98d34df0e3f9744e1adf4801867c3705e8e534fd0bc46e7d2d47fec28cad19c"
+    },
+    {
+      "path": "angel_platform/intelligence/library/077_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 77: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "61c2301a14839d3175b477e5787f190fe4a8758fb89fac95a869f4c061d40c6a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/078_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 78: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "68b15e228cc5d8d6fc22963ed285af406b92e8c58cc9c1596c314c6dafbd20de"
+    },
+    {
+      "path": "angel_platform/intelligence/library/079_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 79: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "6323f46b0298cd146a83f022736fcfa2147852f07a9f5a404f7a7586a7ed9c9f"
+    },
+    {
+      "path": "angel_platform/intelligence/library/080_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 80: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "a413cedadef45baf239228adae4c2ff4ebee1be4770cd5217d338f1d4d379ac5"
+    },
+    {
+      "path": "angel_platform/intelligence/library/081_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 81: System monitoring",
+      "bytes": 22111,
+      "sha256": "9284ff73f68f7802b482c3ea12ed04f991448409003361e7661d8b92ecedce36"
+    },
+    {
+      "path": "angel_platform/intelligence/library/082_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 82: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "ebd11b9a247691e30d6ad97089dd1d176f4cfc8abe4c89138fa564a08100a880"
+    },
+    {
+      "path": "angel_platform/intelligence/library/083_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 83: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "6821cddf23ee603a78eae1decc775bf7183defadb2ee763b5c4e7ab75ff99cfe"
+    },
+    {
+      "path": "angel_platform/intelligence/library/084_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 84: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "0baf872a2da90fa32e804dc1d3987b3d57788ecfa6390525883cee7da31ca14a"
+    },
+    {
+      "path": "angel_platform/intelligence/library/085_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 85: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "9e1187fb4e720c724f0ccb579035ddfafd366bd63645293ace0c5b29a972e2d0"
+    },
+    {
+      "path": "angel_platform/intelligence/library/086_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 86: Linux administration and Debian networking",
+      "bytes": 23036,
+      "sha256": "56aa54f0ef8d4c67bd5f2c36c472468138f963453768234a0f8fcf602947c915"
+    },
+    {
+      "path": "angel_platform/intelligence/library/087_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 87: Raspberry Pi operations",
+      "bytes": 22333,
+      "sha256": "d069113991d6cf37c5b683e8fe50dd5b48b2b2dd9f51ca17b35aea069f6d7a86"
+    },
+    {
+      "path": "angel_platform/intelligence/library/088_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 88: Docker and container troubleshooting",
+      "bytes": 22814,
+      "sha256": "654e649a898ddd4438d2053a9680376d2ee9fde7b5be881fad54631e48a6b4a1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/089_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 89: Python debugging",
+      "bytes": 22074,
+      "sha256": "352b5b99865464f83a9e1f51d1181af9fc010ebf15f75c9f122e34cbf1b81dc8"
+    },
+    {
+      "path": "angel_platform/intelligence/library/090_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 90: Git and GitHub workflow",
+      "bytes": 22333,
+      "sha256": "6e393241f14ea3fa4c68d02d30b47649f9e7dea0f691d170bfd1f55f85d619e6"
+    },
+    {
+      "path": "angel_platform/intelligence/library/091_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 91: OBS and creator infrastructure",
+      "bytes": 22592,
+      "sha256": "0996bd1dc5e546b76f222edb1089bca5a96fe7e19493dcc6846faa1e2fe6d7e1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/092_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 92: Web research and source quality",
+      "bytes": 22629,
+      "sha256": "6a0ffbef5f44f2f963f6f9cfea44b5094661807dfd3085a4a8384b005546e749"
+    },
+    {
+      "path": "angel_platform/intelligence/library/093_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 93: Privacy and security hygiene",
+      "bytes": 22518,
+      "sha256": "159e496c9d3c794ec0bf94804945356e3a9b639feb8211aa4ab9fde54617d618"
+    },
+    {
+      "path": "angel_platform/intelligence/library/094_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 94: Incident response and rollback",
+      "bytes": 22592,
+      "sha256": "c922a28e60f573c6eb0c22bd3e1acfc951619398eb2607f9bf9e2ee9aa05aacb"
+    },
+    {
+      "path": "angel_platform/intelligence/library/095_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 95: System monitoring",
+      "bytes": 22111,
+      "sha256": "a1ca0269a29b4c339bb22dfe381bcd2cb7827171c491ac0746f44e5c70187cfa"
+    },
+    {
+      "path": "angel_platform/intelligence/library/096_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 96: Persistent memory design",
+      "bytes": 22370,
+      "sha256": "487df4b17f08af7d263cc0a86ceb9b2eebe3a832a78c3d4d593163380a9ba685"
+    },
+    {
+      "path": "angel_platform/intelligence/library/097_tool_routing_and_intent_detection.md",
+      "title": "Angel Shared Knowledge Card 97: Tool routing and intent detection",
+      "bytes": 22703,
+      "sha256": "e9dbeba62b8cded9ab66e43beba50c03b866460e12595865989a13b5025701df"
+    },
+    {
+      "path": "angel_platform/intelligence/library/098_human_centered_assistance.md",
+      "title": "Angel Shared Knowledge Card 98: Human-centered assistance",
+      "bytes": 22407,
+      "sha256": "b75fe83696f00c8990643b8b0599f369a0a7d9e2f9c464cbd718c33e3bff7055"
+    },
+    {
+      "path": "angel_platform/intelligence/library/099_windows_diagnostics_and_powershell_safety.md",
+      "title": "Angel Shared Knowledge Card 99: Windows diagnostics and PowerShell safety",
+      "bytes": 22999,
+      "sha256": "65c616c63047db063fc76c4a10687be3a32d6f63a5f5198f3f5555bbdd3a7dbf"
+    },
+    {
+      "path": "angel_platform/intelligence/library/100_linux_administration_and_debian_networking.md",
+      "title": "Angel Shared Knowledge Card 100: Linux administration and Debian networking",
+      "bytes": 23055,
+      "sha256": "3d214b54678eef0d09e4fc77e34ac0ea468ac39d68720e379b55991056991f37"
+    },
+    {
+      "path": "angel_platform/intelligence/library/101_raspberry_pi_operations.md",
+      "title": "Angel Shared Knowledge Card 101: Raspberry Pi operations",
+      "bytes": 22352,
+      "sha256": "d6cfb48f4e35ad5de1ff5ce590529238027d31284f421b5bc5f0f4224d3c48e1"
+    },
+    {
+      "path": "angel_platform/intelligence/library/102_docker_and_container_troubleshooting.md",
+      "title": "Angel Shared Knowledge Card 102: Docker and container troubleshooting",
+      "bytes": 22833,
+      "sha256": "b7417e52264c17859c8f1229682704bb7a92bf6b2f7c2dbba56685c155f90ef6"
+    },
+    {
+      "path": "angel_platform/intelligence/library/103_python_debugging.md",
+      "title": "Angel Shared Knowledge Card 103: Python debugging",
+      "bytes": 22093,
+      "sha256": "20ec714e8da802c8e7f76d620d37790dbf39ab702445d875776168f300e977e2"
+    },
+    {
+      "path": "angel_platform/intelligence/library/104_git_and_github_workflow.md",
+      "title": "Angel Shared Knowledge Card 104: Git and GitHub workflow",
+      "bytes": 22352,
+      "sha256": "3fd35eadc9b5cd5c12b5ed8e0d6e82179d822745c46ece5cf356a0988afd8c05"
+    },
+    {
+      "path": "angel_platform/intelligence/library/105_obs_and_creator_infrastructure.md",
+      "title": "Angel Shared Knowledge Card 105: OBS and creator infrastructure",
+      "bytes": 22611,
+      "sha256": "fda5cfe84d8cef7287aef028333c70166be243332e34a1ed614d63cd5fc66167"
+    },
+    {
+      "path": "angel_platform/intelligence/library/106_web_research_and_source_quality.md",
+      "title": "Angel Shared Knowledge Card 106: Web research and source quality",
+      "bytes": 22648,
+      "sha256": "cf58684036444a47c6804bc2e65e63de72c867a89380d3f8ccc1cd301d561ceb"
+    },
+    {
+      "path": "angel_platform/intelligence/library/107_privacy_and_security_hygiene.md",
+      "title": "Angel Shared Knowledge Card 107: Privacy and security hygiene",
+      "bytes": 22537,
+      "sha256": "2ab6c8d7ea2792c51c9c7a1b7e57a9bfd3ba9f42d36618e34693e1593f92cf19"
+    },
+    {
+      "path": "angel_platform/intelligence/library/108_incident_response_and_rollback.md",
+      "title": "Angel Shared Knowledge Card 108: Incident response and rollback",
+      "bytes": 22611,
+      "sha256": "3f2a84de25bb3a4134d2ad6fdd4906754247a18f868086a931206784909d2e59"
+    },
+    {
+      "path": "angel_platform/intelligence/library/109_system_monitoring.md",
+      "title": "Angel Shared Knowledge Card 109: System monitoring",
+      "bytes": 22130,
+      "sha256": "539bfed65ff86bfec4c6ad9e0e94ee60948d885a15e11633864d34c9c837ba08"
+    },
+    {
+      "path": "angel_platform/intelligence/library/110_persistent_memory_design.md",
+      "title": "Angel Shared Knowledge Card 110: Persistent memory design",
+      "bytes": 22389,
+      "sha256": "a9de385ac4c74af216c3a47210bb5c8eadf9d6a02504b3f30c473474e9efb7aa"
+    }
+  ]
+}
