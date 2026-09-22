@@ -493,6 +493,55 @@ def lock_github_vault():
     _UNLOCKED_GITHUB_TOKEN = None
     return "GitHub credential vault locked."
 
+
+def _remove_vault_files():
+    """Remove the vault and its local recovery artifacts, if present."""
+    removed = False
+    for path in (
+        VAULT_FILE,
+        VAULT_FILE.with_name(VAULT_FILE.name + ".bak"),
+        VAULT_FILE.with_name(VAULT_FILE.name + ".tmp"),
+    ):
+        try:
+            if path.exists():
+                path.unlink()
+                removed = True
+        except OSError as exc:
+            raise RuntimeError(f"Could not remove vault file: {exc}") from exc
+    return removed
+
+
+def delete_github_vault(password, confirmation=""):
+    """Delete encrypted GitHub credentials after verifying the master password."""
+    global _UNLOCKED_GITHUB_TOKEN
+    record = _vault_load()
+    if not record:
+        _UNLOCKED_GITHUB_TOKEN = None
+        return "GitHub credential vault is already clear."
+
+    password = str(password or "")
+    if not password:
+        raise ValueError("Master password is required to delete the credential vault.")
+
+    salt = base64.b64decode(record["salt"])
+    candidate = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600_000, dklen=32)
+    if not hmac.compare_digest(candidate, base64.b64decode(record["verifier"])):
+        raise ValueError("Incorrect master password. Vault was not deleted.")
+
+    if str(confirmation or "").strip().upper() not in {"DELETE", "RESET"}:
+        raise ValueError("Type DELETE or RESET to confirm vault removal.")
+
+    removed = _remove_vault_files()
+    _UNLOCKED_GITHUB_TOKEN = None
+    log_activity("Deleted encrypted GitHub credential vault")
+    return "GitHub credentials deleted. The vault is now not configured." if removed else "GitHub credential vault is already clear."
+
+
+def reset_github_vault(password, confirmation=""):
+    """Reset the GitHub vault; this intentionally removes only vault files."""
+    return delete_github_vault(password, confirmation)
+
+
 def github_owner_from_message(message):
     """Resolve a GitHub owner from a URL or environment, without requiring credentials for public repos."""
     match = re.search(r"github\.com/([A-Za-z0-9_.-]+)(?:[/?#]|$)", message, re.IGNORECASE)
@@ -1331,6 +1380,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"error": "Vault unlock failed: " + str(exc)}, 400)
         if self.path == "/api/vault/lock":
             return self.send_json({"result": lock_github_vault(), "status": vault_status()})
+        if self.path in ("/api/vault/delete", "/api/vault/reset"):
+            try:
+                password = str(data.get("password", ""))
+                confirmation = str(data.get("confirmation", ""))
+                if self.path.endswith("/reset"):
+                    result = reset_github_vault(password, confirmation)
+                else:
+                    result = delete_github_vault(password, confirmation)
+                return self.send_json({"result": result, "status": vault_status()})
+            except Exception as exc:
+                return self.send_json({"error": "Vault removal failed: " + str(exc)}, 400)
         if self.path == "/api/modules/backup":
             try:
                 path = create_module_backup()
